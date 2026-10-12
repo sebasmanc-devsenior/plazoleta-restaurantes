@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
+import com.plazoleta.domain.exceptions.DishNotFoundException;
 import com.plazoleta.domain.exceptions.ForbiddenOperationException;
 import com.plazoleta.domain.exceptions.IntegrationUnavailableException;
 import com.plazoleta.domain.exceptions.InvalidPriceException;
@@ -40,7 +41,7 @@ public class GlobalExceptionHandler {
                 request.getRequestURI());
     }
 
-    @ExceptionHandler({UserNotFoundException.class, RestaurantNotFoundException.class})
+    @ExceptionHandler({UserNotFoundException.class, RestaurantNotFoundException.class, DishNotFoundException.class})
     public ResponseEntity<ErrorResponse> handleNotFound(Exception ex, HttpServletRequest request) {
         return buildResponse(HttpStatus.NOT_FOUND, ex.getMessage(), request.getRequestURI());
     }
