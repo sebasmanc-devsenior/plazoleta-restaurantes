@@ -130,4 +130,17 @@ class PlazoletaApplicationTests {
                         .contentType(MediaType.APPLICATION_JSON).content("{\"active\":false}"))
                 .andExpect(status().isForbidden());
     }
+
+    // ---------- HU-9 Listar restaurantes ----------
+
+    @Test
+    void listingRestaurantsRequiresLoggedInClient() throws Exception {
+        mockMvc.perform(get("/api/restaurants"))
+                .andExpect(status().isUnauthorized());
+        mockMvc.perform(get("/api/restaurants").header("Authorization", bearerFor(5L, Role.PROPIETARIO)))
+                .andExpect(status().isForbidden());
+        mockMvc.perform(get("/api/restaurants").param("page", "0").param("size", "5")
+                        .header("Authorization", bearerFor(7L, Role.CLIENTE)))
+                .andExpect(status().isOk());
+    }
 }
