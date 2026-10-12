@@ -39,6 +39,8 @@ public class SecurityConfiguration {
                 .requestMatchers(HttpMethod.POST, "/api/restaurants").hasRole("ADMIN")
                 // HU-3: solo un propietario crea platos (el dueño se valida en el caso de uso).
                 .requestMatchers(HttpMethod.POST, "/api/dishes").hasRole("PROPIETARIO")
+                // HU-4: solo un propietario modifica platos.
+                .requestMatchers(HttpMethod.PUT, "/api/dishes/*").hasRole("PROPIETARIO")
                 // Cualquier ruta no declarada arriba se rechaza: cerrado por defecto.
                 .anyRequest().denyAll())
             .exceptionHandling(errors -> errors
