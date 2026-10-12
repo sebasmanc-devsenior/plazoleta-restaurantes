@@ -15,7 +15,9 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 import com.plazoleta.domain.exceptions.ForbiddenOperationException;
+import com.plazoleta.domain.exceptions.IntegrationUnavailableException;
 import com.plazoleta.domain.exceptions.MissingAuthenticatedUserException;
+import com.plazoleta.domain.exceptions.UserNotFoundException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -36,6 +38,11 @@ public class GlobalExceptionHandler {
                 request.getRequestURI());
     }
 
+    @ExceptionHandler(UserNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleNotFound(Exception ex, HttpServletRequest request) {
+        return buildResponse(HttpStatus.NOT_FOUND, ex.getMessage(), request.getRequestURI());
+    }
+
     @ExceptionHandler(ForbiddenOperationException.class)
     public ResponseEntity<ErrorResponse> handleForbidden(ForbiddenOperationException ex, HttpServletRequest request) {
         return buildResponse(HttpStatus.FORBIDDEN, ex.getMessage(), request.getRequestURI());
@@ -44,6 +51,13 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(MissingAuthenticatedUserException.class)
     public ResponseEntity<ErrorResponse> handleUnauthorized(Exception ex, HttpServletRequest request) {
         return buildResponse(HttpStatus.UNAUTHORIZED, ex.getMessage(), request.getRequestURI());
+    }
+
+    @ExceptionHandler(IntegrationUnavailableException.class)
+    public ResponseEntity<ErrorResponse> handleUnavailableIntegration(IntegrationUnavailableException ex,
+                                                                      HttpServletRequest request) {
+        log.warn("Integration unavailable at {}: {}", request.getRequestURI(), ex.getMessage(), ex.getCause());
+        return buildResponse(HttpStatus.SERVICE_UNAVAILABLE, ex.getMessage(), request.getRequestURI());
     }
 
     @ExceptionHandler(IllegalStateException.class)
