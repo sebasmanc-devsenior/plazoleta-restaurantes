@@ -5,12 +5,14 @@ import org.springframework.context.annotation.Configuration;
 
 import com.plazoleta.application.ports.input.CreateDishUseCase;
 import com.plazoleta.application.ports.input.CreateRestaurantUseCase;
+import com.plazoleta.application.ports.input.GetRestaurantUseCase;
 import com.plazoleta.application.ports.input.UpdateDishUseCase;
 import com.plazoleta.application.ports.output.DishRepositoryPort;
 import com.plazoleta.application.ports.output.RestaurantRepositoryPort;
 import com.plazoleta.application.ports.output.UserRepositoryPort;
 import com.plazoleta.application.services.CreateDishService;
 import com.plazoleta.application.services.CreateRestaurantService;
+import com.plazoleta.application.services.GetRestaurantService;
 import com.plazoleta.application.services.UpdateDishService;
 
 /**
@@ -39,5 +41,11 @@ public class BeanConfiguration {
     public UpdateDishUseCase updateDishUseCase(DishRepositoryPort dishes, RestaurantRepositoryPort restaurants,
                                                UserRepositoryPort users) {
         return new UpdateDishService(dishes, restaurants, users);
+    }
+
+    /** HU-6: consulta interna que usa users-service para validar al dueño del restaurante. */
+    @Bean
+    public GetRestaurantUseCase getRestaurantUseCase(RestaurantRepositoryPort restaurants) {
+        return new GetRestaurantService(restaurants);
     }
 }
