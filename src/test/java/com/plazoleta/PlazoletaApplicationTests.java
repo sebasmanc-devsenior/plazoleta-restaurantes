@@ -1,6 +1,7 @@
 package com.plazoleta;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -119,5 +120,14 @@ class PlazoletaApplicationTests {
                 .andExpect(status().isForbidden());
         mockMvc.perform(get("/internal/restaurants/999999").header("Authorization", "Bearer " + internalToken))
                 .andExpect(status().isNotFound());
+    }
+
+    // ---------- HU-7 Habilitar / deshabilitar plato ----------
+
+    @Test
+    void onlyOwnerCanEnableOrDisableDishes() throws Exception {
+        mockMvc.perform(patch("/api/dishes/1/availability").header("Authorization", bearerFor(5L, Role.EMPLEADO))
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"active\":false}"))
+                .andExpect(status().isForbidden());
     }
 }
