@@ -18,6 +18,7 @@ Cada historia se desarrolló en su propia rama y se unió a `main` en orden.
 | 4 | Modificar plato: solo precio y descripción | `historia4-modificar-plato` |
 | 6 | Consulta interna del dueño del restaurante (la usa usuarios al crear empleados) | `historia6-dueno-del-restaurante` |
 | 7 | Habilitar / deshabilitar plato | `historia7-habilitar-deshabilitar-plato` |
+| 9 | Listar restaurantes: orden alfabético, paginado, nombre y logo | `historia9-listar-restaurantes` |
 
 ## Arquitectura hexagonal
 
