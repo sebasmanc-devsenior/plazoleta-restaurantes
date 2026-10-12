@@ -13,6 +13,8 @@ import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
+import com.plazoleta.application.ports.output.RestaurantRepositoryPort;
+import com.plazoleta.domain.models.Restaurant;
 import com.plazoleta.domain.models.Role;
 import com.plazoleta.domain.models.User;
 import com.plazoleta.infrastructure.security.JwtTokenService;
@@ -29,6 +31,8 @@ class PlazoletaApplicationTests {
     private MockMvc mockMvc;
     @Autowired
     private JwtTokenService jwtTokenService;
+    @Autowired
+    private RestaurantRepositoryPort restaurantRepository;
 
     private String bearerFor(long userId, Role role) {
         User user = new User(userId, "user" + userId + "@test.com", null, role,
@@ -69,5 +73,26 @@ class PlazoletaApplicationTests {
         mockMvc.perform(post("/api/restaurants").header("Authorization", bearerFor(5L, Role.PROPIETARIO))
                         .contentType(MediaType.APPLICATION_JSON).content("{}"))
                 .andExpect(status().isForbidden());
+    }
+
+    // ---------- HU-3 Crear plato ----------
+
+    @Test
+    void onlyOwnerCanCreateDishes() throws Exception {
+        mockMvc.perform(post("/api/dishes").header("Authorization", bearerFor(5L, Role.CLIENTE))
+                        .contentType(MediaType.APPLICATION_JSON).content("{}"))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void dishWithZeroPriceIsRejectedAsBadRequest() throws Exception {
+        long ownerId = 55L;
+        Restaurant restaurant = restaurantRepository.save(new Restaurant(null, "Sopas", "900111222", "Calle 1",
+                "+573001234567", "https://logo.png", ownerId));
+        mockMvc.perform(post("/api/dishes").header("Authorization", bearerFor(ownerId, Role.PROPIETARIO))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"name\":\"Sopa\",\"price\":0,\"description\":\"d\",\"imageUrl\":\"i\","
+                                + "\"category\":\"c\",\"restaurantId\":" + restaurant.getId() + "}"))
+                .andExpect(status().isBadRequest());
     }
 }

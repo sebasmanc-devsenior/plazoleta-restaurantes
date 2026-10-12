@@ -16,14 +16,16 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 
 import com.plazoleta.domain.exceptions.ForbiddenOperationException;
 import com.plazoleta.domain.exceptions.IntegrationUnavailableException;
+import com.plazoleta.domain.exceptions.InvalidPriceException;
 import com.plazoleta.domain.exceptions.MissingAuthenticatedUserException;
+import com.plazoleta.domain.exceptions.RestaurantNotFoundException;
 import com.plazoleta.domain.exceptions.UserNotFoundException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
     private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
-    @ExceptionHandler(IllegalArgumentException.class)
+    @ExceptionHandler({InvalidPriceException.class, IllegalArgumentException.class})
     public ResponseEntity<ErrorResponse> handleBadRequest(Exception ex, HttpServletRequest request) {
         return buildResponse(HttpStatus.BAD_REQUEST, ex.getMessage(), request.getRequestURI());
     }
@@ -38,7 +40,7 @@ public class GlobalExceptionHandler {
                 request.getRequestURI());
     }
 
-    @ExceptionHandler(UserNotFoundException.class)
+    @ExceptionHandler({UserNotFoundException.class, RestaurantNotFoundException.class})
     public ResponseEntity<ErrorResponse> handleNotFound(Exception ex, HttpServletRequest request) {
         return buildResponse(HttpStatus.NOT_FOUND, ex.getMessage(), request.getRequestURI());
     }

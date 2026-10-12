@@ -3,9 +3,12 @@ package com.plazoleta.infrastructure.config;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import com.plazoleta.application.ports.input.CreateDishUseCase;
 import com.plazoleta.application.ports.input.CreateRestaurantUseCase;
+import com.plazoleta.application.ports.output.DishRepositoryPort;
 import com.plazoleta.application.ports.output.RestaurantRepositoryPort;
 import com.plazoleta.application.ports.output.UserRepositoryPort;
+import com.plazoleta.application.services.CreateDishService;
 import com.plazoleta.application.services.CreateRestaurantService;
 
 /**
@@ -20,5 +23,12 @@ public class BeanConfiguration {
     public CreateRestaurantUseCase createRestaurantUseCase(RestaurantRepositoryPort restaurants,
                                                            UserRepositoryPort users) {
         return new CreateRestaurantService(restaurants, users);
+    }
+
+    /** HU-3 */
+    @Bean
+    public CreateDishUseCase createDishUseCase(DishRepositoryPort dishes, RestaurantRepositoryPort restaurants,
+                                               UserRepositoryPort users) {
+        return new CreateDishService(dishes, restaurants, users);
     }
 }
