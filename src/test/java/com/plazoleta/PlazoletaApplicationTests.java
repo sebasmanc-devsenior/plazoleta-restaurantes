@@ -55,4 +55,19 @@ class PlazoletaApplicationTests {
                     .andExpect(status().isForbidden());
         }
     }
+
+    // ---------- HU-2 Crear restaurante ----------
+
+    @Test
+    void creatingRestaurantWithoutTokenReturnsUnauthorized() throws Exception {
+        mockMvc.perform(post("/api/restaurants").contentType(MediaType.APPLICATION_JSON).content("{}"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void onlyAdminCanCreateRestaurants() throws Exception {
+        mockMvc.perform(post("/api/restaurants").header("Authorization", bearerFor(5L, Role.PROPIETARIO))
+                        .contentType(MediaType.APPLICATION_JSON).content("{}"))
+                .andExpect(status().isForbidden());
+    }
 }
