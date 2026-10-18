@@ -2,6 +2,7 @@ package com.plazoleta;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.util.List;
@@ -94,5 +95,14 @@ class PlazoletaApplicationTests {
                         .content("{\"name\":\"Sopa\",\"price\":0,\"description\":\"d\",\"imageUrl\":\"i\","
                                 + "\"category\":\"c\",\"restaurantId\":" + restaurant.getId() + "}"))
                 .andExpect(status().isBadRequest());
+    }
+
+    // ---------- HU-4 Modificar plato ----------
+
+    @Test
+    void onlyOwnerCanModifyDishes() throws Exception {
+        mockMvc.perform(put("/api/dishes/1").header("Authorization", bearerFor(5L, Role.ADMIN))
+                        .contentType(MediaType.APPLICATION_JSON).content("{}"))
+                .andExpect(status().isForbidden());
     }
 }

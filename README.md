@@ -15,6 +15,7 @@ Cada historia se desarrolló en su propia rama y se unió a `main` en orden.
 | --- | --- | --- |
 | 2 | Crear restaurante (solo ADMIN) | `historia2-crear-restaurante` |
 | 3 | Crear plato (solo el dueño del restaurante) | `historia3-crear-plato` |
+| 4 | Modificar plato: solo precio y descripción | `historia4-modificar-plato` |
 
 ## Arquitectura hexagonal (arquetipo del curso)
 

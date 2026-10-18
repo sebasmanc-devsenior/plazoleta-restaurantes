@@ -5,11 +5,13 @@ import org.springframework.context.annotation.Configuration;
 
 import com.plazoleta.application.port.input.CreateDishUseCase;
 import com.plazoleta.application.port.input.CreateRestaurantUseCase;
+import com.plazoleta.application.port.input.UpdateDishUseCase;
 import com.plazoleta.application.port.output.DishRepositoryPort;
 import com.plazoleta.application.port.output.RestaurantRepositoryPort;
 import com.plazoleta.application.port.output.UserRepositoryPort;
 import com.plazoleta.application.service.CreateDishService;
 import com.plazoleta.application.service.CreateRestaurantService;
+import com.plazoleta.application.service.UpdateDishService;
 
 /**
  * Inyección de dependencias: conecta los casos de uso (application, sin Spring) con los
@@ -30,5 +32,12 @@ public class BeanConfiguration {
     public CreateDishUseCase createDishUseCase(DishRepositoryPort dishes, RestaurantRepositoryPort restaurants,
                                                UserRepositoryPort users) {
         return new CreateDishService(dishes, restaurants, users);
+    }
+
+    /** HU-4 */
+    @Bean
+    public UpdateDishUseCase updateDishUseCase(DishRepositoryPort dishes, RestaurantRepositoryPort restaurants,
+                                               UserRepositoryPort users) {
+        return new UpdateDishService(dishes, restaurants, users);
     }
 }
