@@ -6,6 +6,7 @@ import java.time.Instant;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -18,6 +19,7 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
+import com.plazoleta.infrastructure.configuration.security.InternalServiceTokenFilter;
 import com.plazoleta.infrastructure.configuration.security.JwtAuthenticationFilter;
 
 /**
@@ -29,8 +31,8 @@ import com.plazoleta.infrastructure.configuration.security.JwtAuthenticationFilt
 public class SecurityConfiguration {
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http, JwtAuthenticationFilter jwtAuthenticationFilter)
-            throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http, JwtAuthenticationFilter jwtAuthenticationFilter,
+                                                   @Value("${app.internal.token}") String internalToken) throws Exception {
         http
             .csrf(AbstractHttpConfigurer::disable)
             .authorizeHttpRequests(auth -> auth
@@ -41,6 +43,8 @@ public class SecurityConfiguration {
                 .requestMatchers(HttpMethod.POST, "/api/dishes").hasRole("PROPIETARIO")
                 // HU-4: solo un propietario modifica platos.
                 .requestMatchers(HttpMethod.PUT, "/api/dishes/*").hasRole("PROPIETARIO")
+                // HU-6: solo users-service, con el token interno, consulta el dueño de un restaurante.
+                .requestMatchers(HttpMethod.GET, "/internal/restaurants/*").hasRole(InternalServiceTokenFilter.INTERNAL_ROLE)
                 // Cualquier ruta no declarada arriba se rechaza: cerrado por defecto.
                 .anyRequest().denyAll())
             .exceptionHandling(errors -> errors
@@ -50,7 +54,8 @@ public class SecurityConfiguration {
                 .accessDeniedHandler((request, response, ex) ->
                         writeError(request, response, HttpStatus.FORBIDDEN, "Insufficient permissions")))
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-            .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+            .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+            .addFilterAfter(new InternalServiceTokenFilter(internalToken), JwtAuthenticationFilter.class);
         return http.build();
     }
 
