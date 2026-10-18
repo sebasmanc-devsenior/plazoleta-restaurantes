@@ -9,6 +9,7 @@ import java.util.List;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
@@ -34,6 +35,8 @@ class PlazoletaApplicationTests {
     private JwtTokenService jwtTokenService;
     @Autowired
     private RestaurantRepositoryPort restaurantRepository;
+    @Value("${app.internal.token}")
+    private String internalToken;
 
     private String bearerFor(long userId, Role role) {
         User user = new User(userId, "user" + userId + "@test.com", null, role,
@@ -104,5 +107,17 @@ class PlazoletaApplicationTests {
         mockMvc.perform(put("/api/dishes/1").header("Authorization", bearerFor(5L, Role.ADMIN))
                         .contentType(MediaType.APPLICATION_JSON).content("{}"))
                 .andExpect(status().isForbidden());
+    }
+
+    // ---------- HU-6 Consulta interna del dueño (la usa users-service) ----------
+
+    @Test
+    void internalRestaurantLookupRequiresInternalToken() throws Exception {
+        mockMvc.perform(get("/internal/restaurants/1"))
+                .andExpect(status().isUnauthorized());
+        mockMvc.perform(get("/internal/restaurants/1").header("Authorization", bearerFor(5L, Role.PROPIETARIO)))
+                .andExpect(status().isForbidden());
+        mockMvc.perform(get("/internal/restaurants/999999").header("Authorization", "Bearer " + internalToken))
+                .andExpect(status().isNotFound());
     }
 }
