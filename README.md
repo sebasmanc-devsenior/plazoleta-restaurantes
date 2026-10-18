@@ -17,6 +17,7 @@ Cada historia se desarrolló en su propia rama y se unió a `main` en orden.
 | 3 | Crear plato (solo el dueño del restaurante) | `historia3-crear-plato` |
 | 4 | Modificar plato: solo precio y descripción | `historia4-modificar-plato` |
 | 6 | Consulta interna del dueño del restaurante (la usa usuarios al crear empleados) | `historia6-dueno-del-restaurante` |
+| 7 | Habilitar / deshabilitar plato | `historia7-habilitar-deshabilitar-plato` |
 
 ## Arquitectura hexagonal (arquetipo del curso)
 
