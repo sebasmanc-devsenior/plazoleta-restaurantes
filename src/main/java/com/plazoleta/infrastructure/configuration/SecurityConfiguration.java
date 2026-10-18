@@ -45,6 +45,8 @@ public class SecurityConfiguration {
                 .requestMatchers(HttpMethod.PUT, "/api/dishes/*").hasRole("PROPIETARIO")
                 // HU-6: solo users-service, con el token interno, consulta el dueño de un restaurante.
                 .requestMatchers(HttpMethod.GET, "/internal/restaurants/*").hasRole(InternalServiceTokenFilter.INTERNAL_ROLE)
+                // HU-7: solo un propietario habilita o deshabilita platos.
+                .requestMatchers(HttpMethod.PATCH, "/api/dishes/*/availability").hasRole("PROPIETARIO")
                 // Cualquier ruta no declarada arriba se rechaza: cerrado por defecto.
                 .anyRequest().denyAll())
             .exceptionHandling(errors -> errors

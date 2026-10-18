@@ -6,6 +6,7 @@ import org.springframework.context.annotation.Configuration;
 import com.plazoleta.application.port.input.CreateDishUseCase;
 import com.plazoleta.application.port.input.CreateRestaurantUseCase;
 import com.plazoleta.application.port.input.GetRestaurantUseCase;
+import com.plazoleta.application.port.input.SetDishAvailabilityUseCase;
 import com.plazoleta.application.port.input.UpdateDishUseCase;
 import com.plazoleta.application.port.output.DishRepositoryPort;
 import com.plazoleta.application.port.output.RestaurantRepositoryPort;
@@ -13,6 +14,7 @@ import com.plazoleta.application.port.output.UserRepositoryPort;
 import com.plazoleta.application.service.CreateDishService;
 import com.plazoleta.application.service.CreateRestaurantService;
 import com.plazoleta.application.service.GetRestaurantService;
+import com.plazoleta.application.service.SetDishAvailabilityService;
 import com.plazoleta.application.service.UpdateDishService;
 
 /**
@@ -47,5 +49,13 @@ public class BeanConfiguration {
     @Bean
     public GetRestaurantUseCase getRestaurantUseCase(RestaurantRepositoryPort restaurants) {
         return new GetRestaurantService(restaurants);
+    }
+
+    /** HU-7 */
+    @Bean
+    public SetDishAvailabilityUseCase setDishAvailabilityUseCase(DishRepositoryPort dishes,
+                                                                 RestaurantRepositoryPort restaurants,
+                                                                 UserRepositoryPort users) {
+        return new SetDishAvailabilityService(dishes, restaurants, users);
     }
 }

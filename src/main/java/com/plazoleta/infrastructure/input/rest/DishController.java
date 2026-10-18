@@ -4,6 +4,7 @@ import jakarta.servlet.http.HttpServletRequest;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -15,6 +16,7 @@ import com.plazoleta.application.dto.CreateDishCommand;
 import com.plazoleta.application.dto.DishResponse;
 import com.plazoleta.application.dto.UpdateDishCommand;
 import com.plazoleta.application.port.input.CreateDishUseCase;
+import com.plazoleta.application.port.input.SetDishAvailabilityUseCase;
 import com.plazoleta.application.port.input.UpdateDishUseCase;
 import com.plazoleta.infrastructure.configuration.security.AuthenticatedUserContext;
 
@@ -27,10 +29,13 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 public class DishController {
     private final CreateDishUseCase createDishUseCase;
     private final UpdateDishUseCase updateDishUseCase;
+    private final SetDishAvailabilityUseCase setDishAvailabilityUseCase;
 
-    public DishController(CreateDishUseCase createDishUseCase, UpdateDishUseCase updateDishUseCase) {
+    public DishController(CreateDishUseCase createDishUseCase, UpdateDishUseCase updateDishUseCase,
+                          SetDishAvailabilityUseCase setDishAvailabilityUseCase) {
         this.createDishUseCase = createDishUseCase;
         this.updateDishUseCase = updateDishUseCase;
+        this.setDishAvailabilityUseCase = setDishAvailabilityUseCase;
     }
 
     @PostMapping("/dishes")
@@ -46,5 +51,21 @@ public class DishController {
                                                    HttpServletRequest request) {
         Long ownerId = AuthenticatedUserContext.resolveUserId(request);
         return ResponseEntity.ok(updateDishUseCase.execute(dishId, command, ownerId));
+    }
+
+    @PatchMapping("/dishes/{dishId}/availability")
+    @Operation(summary = "HU-7 Enable or disable dish", description = "Only the OWNER of the dish's restaurant.")
+    public ResponseEntity<DishResponse> setAvailability(@PathVariable Long dishId,
+                                                        @RequestBody AvailabilityRequest command,
+                                                        HttpServletRequest request) {
+        Long ownerId = AuthenticatedUserContext.resolveUserId(request);
+        return ResponseEntity.ok(setDishAvailabilityUseCase.execute(dishId, command.isActive(), ownerId));
+    }
+
+    public static class AvailabilityRequest {
+        private boolean active;
+
+        public boolean isActive() { return active; }
+        public void setActive(boolean active) { this.active = active; }
     }
 }
