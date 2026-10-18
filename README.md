@@ -13,6 +13,7 @@ Cada historia se desarrolló en su propia rama y se unió a `main` en orden.
 
 | HU | Funcionalidad | Rama |
 | --- | --- | --- |
+| 2 | Crear restaurante (solo ADMIN) | `historia2-crear-restaurante` |
 
 ## Arquitectura hexagonal (arquetipo del curso)
 
