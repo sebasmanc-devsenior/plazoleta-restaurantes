@@ -37,6 +37,8 @@ public class SecurityConfiguration {
                 .requestMatchers("/error", "/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
                 // HU-2: solo el administrador crea restaurantes.
                 .requestMatchers(HttpMethod.POST, "/api/restaurants").hasRole("ADMIN")
+                // HU-3: solo un propietario crea platos (el dueño se valida en el caso de uso).
+                .requestMatchers(HttpMethod.POST, "/api/dishes").hasRole("PROPIETARIO")
                 // Cualquier ruta no declarada arriba se rechaza: cerrado por defecto.
                 .anyRequest().denyAll())
             .exceptionHandling(errors -> errors
