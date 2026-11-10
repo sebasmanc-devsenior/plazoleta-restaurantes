@@ -21,6 +21,7 @@ Cada historia se desarrolló en su propia rama y se unió a `main` en orden.
 | 9 | Listar restaurantes: orden alfabético, paginado, nombre y logo | `historia9-listar-restaurantes` |
 | 10 | Listar platos de un restaurante: paginado y filtro por categoría; los deshabilitados salen como no disponibles | `historia10-listar-platos` |
 | 11 | Realizar pedido: platos de un solo restaurante, queda PENDIENTE, un pedido en proceso por cliente | `historia11-realizar-pedido` |
+| 12 | Listar pedidos por estado: solo los del restaurante del empleado, paginados | `historia12-listar-pedidos-por-estado` |
 
 ## Arquitectura hexagonal (arquetipo del curso)
 
