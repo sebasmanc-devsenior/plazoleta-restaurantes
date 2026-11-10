@@ -1,9 +1,12 @@
 package com.plazoleta.infrastructure.configuration;
 
+import java.time.Clock;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import com.plazoleta.application.port.input.CreateDishUseCase;
+import com.plazoleta.application.port.input.CreateOrderUseCase;
 import com.plazoleta.application.port.input.CreateRestaurantUseCase;
 import com.plazoleta.application.port.input.GetRestaurantUseCase;
 import com.plazoleta.application.port.input.ListRestaurantDishesUseCase;
@@ -11,9 +14,11 @@ import com.plazoleta.application.port.input.ListRestaurantsUseCase;
 import com.plazoleta.application.port.input.SetDishAvailabilityUseCase;
 import com.plazoleta.application.port.input.UpdateDishUseCase;
 import com.plazoleta.application.port.output.DishRepositoryPort;
+import com.plazoleta.application.port.output.OrderRepositoryPort;
 import com.plazoleta.application.port.output.RestaurantRepositoryPort;
 import com.plazoleta.application.port.output.UserRepositoryPort;
 import com.plazoleta.application.service.CreateDishService;
+import com.plazoleta.application.service.CreateOrderService;
 import com.plazoleta.application.service.CreateRestaurantService;
 import com.plazoleta.application.service.GetRestaurantService;
 import com.plazoleta.application.service.ListRestaurantDishesService;
@@ -74,5 +79,18 @@ public class BeanConfiguration {
     public ListRestaurantDishesUseCase listRestaurantDishesUseCase(DishRepositoryPort dishes,
                                                                    RestaurantRepositoryPort restaurants) {
         return new ListRestaurantDishesService(dishes, restaurants);
+    }
+
+    /** Reloj del sistema: los casos de uso lo reciben para que las pruebas puedan fijar la hora. */
+    @Bean
+    public Clock clock() {
+        return Clock.systemDefaultZone();
+    }
+
+    /** HU-11 */
+    @Bean
+    public CreateOrderUseCase createOrderUseCase(OrderRepositoryPort orders, DishRepositoryPort dishes,
+                                                 RestaurantRepositoryPort restaurants, Clock clock) {
+        return new CreateOrderService(orders, dishes, restaurants, clock);
     }
 }
