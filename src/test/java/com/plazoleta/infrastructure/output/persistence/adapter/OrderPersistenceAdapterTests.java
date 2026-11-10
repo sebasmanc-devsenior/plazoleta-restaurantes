@@ -51,4 +51,30 @@ class OrderPersistenceAdapterTests {
         assertThat(orders.existsByClientIdAndStatusIn(8L, OrderStatus.IN_PROCESS)).isFalse();
         assertThat(orders.existsByClientIdAndStatusIn(7L, Set.of(OrderStatus.ENTREGADO))).isFalse();
     }
+
+    /** HU-12: solo pedidos del restaurante y del estado pedido, del más antiguo al más reciente. */
+    @Test
+    void findsOrdersOfOneRestaurantByStatusOldestFirst() {
+        Long restaurantId = restaurants.save(new Restaurant(null, "Sabor Paisa", "900123456", "Calle 10",
+                "+573001112233", "https://logo.png", 2L)).getId();
+        Long otherId = restaurants.save(new Restaurant(null, "Otro", "900999999", "Calle 20",
+                "+573001112244", "https://otro.png", 3L)).getId();
+        Long dishId = dishes.save(new Dish(null, "Bandeja", 32000, "d", "https://i.png", "Almuerzos",
+                restaurantId, true)).getId();
+        Long otherDishId = dishes.save(new Dish(null, "Sancocho", 20000, "d", "https://i.png", "Almuerzos",
+                otherId, true)).getId();
+        Long newer = orders.save(Order.create(1L, restaurantId, List.of(new OrderItem(dishId, 1)),
+                LocalDateTime.of(2026, 11, 10, 13, 0))).getId();
+        Long older = orders.save(Order.create(2L, restaurantId, List.of(new OrderItem(dishId, 1)),
+                LocalDateTime.of(2026, 11, 10, 12, 0))).getId();
+        orders.save(Order.create(3L, otherId, List.of(new OrderItem(otherDishId, 1)),
+                LocalDateTime.of(2026, 11, 10, 11, 0)));
+
+        var pending = orders.findByRestaurantAndStatus(restaurantId, OrderStatus.PENDIENTE, 0, 10);
+        var ready = orders.findByRestaurantAndStatus(restaurantId, OrderStatus.LISTO, 0, 10);
+
+        assertThat(pending.getContent()).extracting(Order::getId).containsExactly(older, newer);
+        assertThat(pending.getTotalElements()).isEqualTo(2);
+        assertThat(ready.getContent()).isEmpty();
+    }
 }
