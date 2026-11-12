@@ -90,7 +90,8 @@ public class BeanConfiguration {
     /** HU-11 */
     @Bean
     public CreateOrderUseCase createOrderUseCase(OrderRepositoryPort orders, DishRepositoryPort dishes,
-                                                 RestaurantRepositoryPort restaurants, Clock clock) {
-        return new CreateOrderService(orders, dishes, restaurants, clock);
+                                                 RestaurantRepositoryPort restaurants, UserRepositoryPort users,
+                                                 Clock clock) {
+        return new CreateOrderService(orders, dishes, restaurants, users, clock);
     }
 }
