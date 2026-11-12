@@ -1,5 +1,6 @@
 package com.plazoleta.infrastructure.output.persistence.adapter;
 
+import java.util.Optional;
 import java.util.Set;
 
 import org.springframework.data.domain.PageRequest;
@@ -8,6 +9,7 @@ import org.springframework.stereotype.Repository;
 
 import com.plazoleta.application.dto.PageResult;
 import com.plazoleta.application.port.output.OrderRepositoryPort;
+import com.plazoleta.domain.exception.OrderNotFoundException;
 import com.plazoleta.domain.model.Order;
 import com.plazoleta.domain.model.OrderStatus;
 import com.plazoleta.infrastructure.output.persistence.entity.OrderEntity;
@@ -23,7 +25,19 @@ public class OrderPersistenceAdapter implements OrderRepositoryPort {
 
     @Override
     public Order save(Order order) {
-        return orderJpaRepository.save(OrderEntity.fromDomain(order)).toDomain();
+        if (order.getId() == null) {
+            return orderJpaRepository.save(OrderEntity.fromDomain(order)).toDomain();
+        }
+        // Pedido que ya existe: se actualiza su fila (estado y empleado) sin volver a crear sus platos.
+        OrderEntity entity = orderJpaRepository.findById(order.getId())
+                .orElseThrow(() -> new OrderNotFoundException("Order was not found"));
+        entity.applyChanges(order);
+        return orderJpaRepository.save(entity).toDomain();
+    }
+
+    @Override
+    public Optional<Order> findById(Long id) {
+        return orderJpaRepository.findById(id).map(OrderEntity::toDomain);
     }
 
     @Override

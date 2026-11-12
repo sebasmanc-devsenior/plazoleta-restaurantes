@@ -5,6 +5,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -14,6 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.plazoleta.application.dto.CreateOrderCommand;
 import com.plazoleta.application.dto.OrderResponse;
 import com.plazoleta.application.dto.PageResult;
+import com.plazoleta.application.port.input.AssignOrderUseCase;
 import com.plazoleta.application.port.input.CreateOrderUseCase;
 import com.plazoleta.application.port.input.ListOrdersByStatusUseCase;
 import com.plazoleta.infrastructure.configuration.security.AuthenticatedUserContext;
@@ -27,10 +30,13 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 public class OrderController {
     private final CreateOrderUseCase createOrderUseCase;
     private final ListOrdersByStatusUseCase listOrdersByStatusUseCase;
+    private final AssignOrderUseCase assignOrderUseCase;
 
-    public OrderController(CreateOrderUseCase createOrderUseCase, ListOrdersByStatusUseCase listOrdersByStatusUseCase) {
+    public OrderController(CreateOrderUseCase createOrderUseCase, ListOrdersByStatusUseCase listOrdersByStatusUseCase,
+                           AssignOrderUseCase assignOrderUseCase) {
         this.createOrderUseCase = createOrderUseCase;
         this.listOrdersByStatusUseCase = listOrdersByStatusUseCase;
+        this.assignOrderUseCase = assignOrderUseCase;
     }
 
     @PostMapping("/orders")
@@ -54,5 +60,16 @@ public class OrderController {
         var principal = AuthenticatedUserContext.currentPrincipal();
         Long restaurantId = principal == null ? null : principal.getRestaurantId();
         return ResponseEntity.ok(listOrdersByStatusUseCase.execute(restaurantId, status, page, size));
+    }
+
+    @PatchMapping("/orders/{orderId}/assign")
+    @Operation(summary = "HU-13 Assign order to myself",
+            description = "EMPLEADO only. The employee in the token becomes the assigned employee and the order goes "
+                    + "from PENDIENTE to EN_PREPARACION. Only orders of the employee's restaurant.")
+    public ResponseEntity<OrderResponse> assignOrder(@PathVariable Long orderId, HttpServletRequest request) {
+        Long employeeId = AuthenticatedUserContext.resolveUserId(request);
+        var principal = AuthenticatedUserContext.currentPrincipal();
+        Long restaurantId = principal == null ? null : principal.getRestaurantId();
+        return ResponseEntity.ok(assignOrderUseCase.execute(orderId, employeeId, restaurantId));
     }
 }

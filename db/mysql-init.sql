@@ -52,12 +52,16 @@ CREATE TABLE IF NOT EXISTS dishes (
 -- client_id es el id del cliente en el microservicio de usuarios (otra base de
 -- datos), por eso NO tiene llave foránea. status: PENDIENTE, EN_PREPARACION,
 -- LISTO, ENTREGADO o CANCELADO.
+-- HU-13: employee_id es el empleado asignado (también de usuarios, sin llave foránea);
+-- queda en NULL hasta que un empleado se asigna el pedido. Si la tabla ya existía sin
+-- esta columna, el microservicio la agrega solo al arrancar.
 CREATE TABLE IF NOT EXISTS orders (
     id            BIGINT      NOT NULL AUTO_INCREMENT,
     client_id     BIGINT      NOT NULL,
     restaurant_id BIGINT      NOT NULL,
     status        VARCHAR(20) NOT NULL,
     created_at    DATETIME(6) NOT NULL,
+    employee_id   BIGINT      NULL,
     PRIMARY KEY (id),
     CONSTRAINT fk_orders_restaurant FOREIGN KEY (restaurant_id) REFERENCES restaurants (id),
     KEY idx_orders_client_status (client_id, status),
