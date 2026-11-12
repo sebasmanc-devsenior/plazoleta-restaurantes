@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import java.time.LocalDateTime;
@@ -25,6 +26,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import com.plazoleta.application.dto.DeliverOrderCommand;
 import com.plazoleta.application.dto.OrderResponse;
 import com.plazoleta.application.port.output.OrderRepositoryPort;
+import com.plazoleta.application.port.output.OrderTraceabilityPort;
 import com.plazoleta.domain.exception.ForbiddenOperationException;
 import com.plazoleta.domain.exception.InvalidOrderStatusException;
 import com.plazoleta.domain.exception.InvalidSecurityPinException;
@@ -43,6 +45,8 @@ class DeliverOrderServiceTest {
 
     @Mock
     private OrderRepositoryPort orderRepositoryPort;
+    @Mock
+    private OrderTraceabilityPort orderTraceabilityPort;
     @InjectMocks
     private DeliverOrderService service;
 
@@ -154,5 +158,27 @@ class DeliverOrderServiceTest {
 
         assertThatThrownBy(() -> service.execute(ORDER_ID, new DeliverOrderCommand(PIN), EMPLOYEE_ID, RESTAURANT_ID))
                 .isInstanceOf(OrderNotFoundException.class);
+    }
+
+    /** HU-17: el cambio LISTO -> ENTREGADO queda registrado. */
+    @Test
+    void recordsTheChangeFromReadyToDelivered() {
+        orderIs(OrderStatus.LISTO);
+        when(orderRepositoryPort.save(any())).thenAnswer(call -> call.getArgument(0));
+
+        service.execute(ORDER_ID, new DeliverOrderCommand(PIN), EMPLOYEE_ID, RESTAURANT_ID);
+
+        ArgumentCaptor<Order> recorded = ArgumentCaptor.forClass(Order.class);
+        verify(orderTraceabilityPort).record(recorded.capture(), org.mockito.ArgumentMatchers.eq(OrderStatus.LISTO));
+        assertThat(recorded.getValue().getStatus()).isEqualTo(OrderStatus.ENTREGADO);
+    }
+
+    @Test
+    void aWrongPinLeavesNoTraceabilityLog() {
+        orderIs(OrderStatus.LISTO);
+
+        assertThatThrownBy(() -> service.execute(ORDER_ID, new DeliverOrderCommand("000000"), EMPLOYEE_ID,
+                RESTAURANT_ID)).isInstanceOf(InvalidSecurityPinException.class);
+        verifyNoInteractions(orderTraceabilityPort);
     }
 }
