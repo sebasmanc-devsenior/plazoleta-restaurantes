@@ -19,6 +19,7 @@ Cada historia se desarrolló en su propia rama y se unió a `main` en orden.
 | 6 | Consulta interna del dueño del restaurante (la usa usuarios al crear empleados) | `historia6-dueno-del-restaurante` |
 | 7 | Habilitar / deshabilitar plato | `historia7-habilitar-deshabilitar-plato` |
 | 9 | Listar restaurantes: orden alfabético, paginado, nombre y logo | `historia9-listar-restaurantes` |
+| 10 | Listar platos de un restaurante: paginado y filtro por categoría; los deshabilitados salen como no disponibles | `historia10-listar-platos` |
 
 ## Arquitectura hexagonal (arquetipo del curso)
 

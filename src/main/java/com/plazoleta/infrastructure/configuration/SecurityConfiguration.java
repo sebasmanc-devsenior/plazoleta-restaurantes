@@ -49,6 +49,8 @@ public class SecurityConfiguration {
                 .requestMatchers(HttpMethod.PATCH, "/api/dishes/*/availability").hasRole("PROPIETARIO")
                 // HU-9: solo un cliente lista los restaurantes.
                 .requestMatchers(HttpMethod.GET, "/api/restaurants").hasRole("CLIENTE")
+                // HU-10: solo un cliente consulta el menú de un restaurante.
+                .requestMatchers(HttpMethod.GET, "/api/restaurants/*/dishes").hasRole("CLIENTE")
                 // Cualquier ruta no declarada arriba se rechaza: cerrado por defecto.
                 .anyRequest().denyAll())
             .exceptionHandling(errors -> errors
