@@ -18,6 +18,7 @@ import com.plazoleta.application.dto.DeliverOrderCommand;
 import com.plazoleta.application.dto.OrderResponse;
 import com.plazoleta.application.dto.PageResult;
 import com.plazoleta.application.port.input.AssignOrderUseCase;
+import com.plazoleta.application.port.input.CancelOrderUseCase;
 import com.plazoleta.application.port.input.CreateOrderUseCase;
 import com.plazoleta.application.port.input.DeliverOrderUseCase;
 import com.plazoleta.application.port.input.ListOrdersByStatusUseCase;
@@ -36,15 +37,17 @@ public class OrderController {
     private final AssignOrderUseCase assignOrderUseCase;
     private final MarkOrderReadyUseCase markOrderReadyUseCase;
     private final DeliverOrderUseCase deliverOrderUseCase;
+    private final CancelOrderUseCase cancelOrderUseCase;
 
     public OrderController(CreateOrderUseCase createOrderUseCase, ListOrdersByStatusUseCase listOrdersByStatusUseCase,
                            AssignOrderUseCase assignOrderUseCase, MarkOrderReadyUseCase markOrderReadyUseCase,
-                           DeliverOrderUseCase deliverOrderUseCase) {
+                           DeliverOrderUseCase deliverOrderUseCase, CancelOrderUseCase cancelOrderUseCase) {
         this.createOrderUseCase = createOrderUseCase;
         this.listOrdersByStatusUseCase = listOrdersByStatusUseCase;
         this.assignOrderUseCase = assignOrderUseCase;
         this.markOrderReadyUseCase = markOrderReadyUseCase;
         this.deliverOrderUseCase = deliverOrderUseCase;
+        this.cancelOrderUseCase = cancelOrderUseCase;
     }
 
     @PostMapping("/orders")
@@ -103,5 +106,14 @@ public class OrderController {
         var principal = AuthenticatedUserContext.currentPrincipal();
         Long restaurantId = principal == null ? null : principal.getRestaurantId();
         return ResponseEntity.ok(deliverOrderUseCase.execute(orderId, command, employeeId, restaurantId));
+    }
+
+    @PatchMapping("/orders/{orderId}/cancel")
+    @Operation(summary = "HU-16 Cancel order",
+            description = "CLIENTE only, and only their own order. A PENDIENTE order becomes CANCELADO; in any other "
+                    + "status the answer is 409 with the message that it can no longer be cancelled.")
+    public ResponseEntity<OrderResponse> cancelOrder(@PathVariable Long orderId, HttpServletRequest request) {
+        Long clientId = AuthenticatedUserContext.resolveUserId(request);
+        return ResponseEntity.ok(cancelOrderUseCase.execute(orderId, clientId));
     }
 }

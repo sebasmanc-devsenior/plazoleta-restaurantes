@@ -7,6 +7,7 @@ import org.springframework.context.annotation.Configuration;
 
 import com.plazoleta.application.port.input.CreateDishUseCase;
 import com.plazoleta.application.port.input.AssignOrderUseCase;
+import com.plazoleta.application.port.input.CancelOrderUseCase;
 import com.plazoleta.application.port.input.CreateOrderUseCase;
 import com.plazoleta.application.port.input.DeliverOrderUseCase;
 import com.plazoleta.application.port.input.CreateRestaurantUseCase;
@@ -25,6 +26,7 @@ import com.plazoleta.application.port.output.RestaurantRepositoryPort;
 import com.plazoleta.application.port.output.UserRepositoryPort;
 import com.plazoleta.application.service.CreateDishService;
 import com.plazoleta.application.service.AssignOrderService;
+import com.plazoleta.application.service.CancelOrderService;
 import com.plazoleta.application.service.CreateOrderService;
 import com.plazoleta.application.service.DeliverOrderService;
 import com.plazoleta.application.service.CreateRestaurantService;
@@ -128,5 +130,11 @@ public class BeanConfiguration {
     @Bean
     public DeliverOrderUseCase deliverOrderUseCase(OrderRepositoryPort orders) {
         return new DeliverOrderService(orders);
+    }
+
+    /** HU-16 */
+    @Bean
+    public CancelOrderUseCase cancelOrderUseCase(OrderRepositoryPort orders) {
+        return new CancelOrderService(orders);
     }
 }
