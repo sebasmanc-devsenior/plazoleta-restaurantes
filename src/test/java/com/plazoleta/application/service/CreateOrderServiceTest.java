@@ -31,13 +31,18 @@ import com.plazoleta.application.dto.OrderResponse;
 import com.plazoleta.application.port.output.DishRepositoryPort;
 import com.plazoleta.application.port.output.OrderRepositoryPort;
 import com.plazoleta.application.port.output.RestaurantRepositoryPort;
+import com.plazoleta.application.port.output.UserRepositoryPort;
 import com.plazoleta.domain.exception.ActiveOrderExistsException;
 import com.plazoleta.domain.exception.DishNotFoundException;
+import com.plazoleta.domain.exception.ForbiddenOperationException;
 import com.plazoleta.domain.exception.RestaurantNotFoundException;
+import com.plazoleta.domain.exception.UserNotFoundException;
 import com.plazoleta.domain.model.Dish;
 import com.plazoleta.domain.model.Order;
 import com.plazoleta.domain.model.OrderStatus;
 import com.plazoleta.domain.model.Restaurant;
+import com.plazoleta.domain.model.Role;
+import com.plazoleta.domain.model.User;
 
 /** HU-11: Realizar pedido. */
 @ExtendWith(MockitoExtension.class)
@@ -51,19 +56,29 @@ class CreateOrderServiceTest {
     private DishRepositoryPort dishRepositoryPort;
     @Mock
     private RestaurantRepositoryPort restaurantRepositoryPort;
+    @Mock
+    private UserRepositoryPort userRepositoryPort;
 
     private CreateOrderService service;
 
     @BeforeEach
     void setUp() {
-        service = new CreateOrderService(orderRepositoryPort, dishRepositoryPort, restaurantRepositoryPort, CLOCK);
+        service = new CreateOrderService(orderRepositoryPort, dishRepositoryPort, restaurantRepositoryPort,
+                userRepositoryPort, CLOCK);
     }
 
     private static Dish dish(long id, long restaurantId, boolean active) {
         return new Dish(id, "Plato " + id, 15000, "d", "https://i.png", "Almuerzos", restaurantId, active);
     }
 
+    /** Respuesta del microservicio de usuarios para el cliente que hace el pedido. */
+    private void clientIsRegisteredAs(Role role) {
+        when(userRepositoryPort.findRegisteredById(CLIENT_ID))
+                .thenReturn(Optional.of(new User(CLIENT_ID, null, "+573001112233", role, null)));
+    }
+
     private void restaurantExists(long id) {
+        clientIsRegisteredAs(Role.CLIENTE);
         when(restaurantRepositoryPort.findById(id)).thenReturn(Optional.of(
                 new Restaurant(id, "Sabor Paisa", "900123456", "Calle 1", "+573001234567", "https://l.png", 2L)));
     }
@@ -143,10 +158,30 @@ class CreateOrderServiceTest {
 
     @Test
     void rejectsUnknownRestaurant() {
+        clientIsRegisteredAs(Role.CLIENTE);
         when(restaurantRepositoryPort.findById(1L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> service.execute(order(new OrderItemCommand(10L, 1)), CLIENT_ID))
                 .isInstanceOf(RestaurantNotFoundException.class);
+    }
+
+    @Test
+    void asksTheUsersServiceForTheClientAccount() {
+        when(userRepositoryPort.findRegisteredById(CLIENT_ID)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> service.execute(order(new OrderItemCommand(10L, 1)), CLIENT_ID))
+                .isInstanceOf(UserNotFoundException.class);
+        verify(userRepositoryPort).findRegisteredById(CLIENT_ID);
+        verify(orderRepositoryPort, never()).save(any());
+    }
+
+    @Test
+    void rejectsAccountThatIsNotAClient() {
+        clientIsRegisteredAs(Role.EMPLEADO);
+
+        assertThatThrownBy(() -> service.execute(order(new OrderItemCommand(10L, 1)), CLIENT_ID))
+                .isInstanceOf(ForbiddenOperationException.class);
+        verify(orderRepositoryPort, never()).save(any());
     }
 
     @Test
