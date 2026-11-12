@@ -46,6 +46,7 @@ class MarkOrderReadyServiceTest {
     private static final Long ORDER_ID = 50L;
     private static final Long CLIENT_ID = 7L;
     private static final Long RESTAURANT_ID = 1L;
+    private static final Long EMPLOYEE_ID = 9L;
     private static final String PHONE = "+573001112233";
 
     @Mock
@@ -80,7 +81,7 @@ class MarkOrderReadyServiceTest {
         clientHasPhone(PHONE);
         when(orderRepositoryPort.save(any())).thenAnswer(call -> call.getArgument(0));
 
-        OrderResponse response = service.execute(ORDER_ID, RESTAURANT_ID);
+        OrderResponse response = service.execute(ORDER_ID, EMPLOYEE_ID, RESTAURANT_ID);
 
         ArgumentCaptor<String> message = ArgumentCaptor.forClass(String.class);
         verify(smsNotificationPort).send(org.mockito.ArgumentMatchers.eq(PHONE), message.capture());
@@ -99,7 +100,7 @@ class MarkOrderReadyServiceTest {
         clientHasPhone(PHONE);
         when(orderRepositoryPort.save(any())).thenAnswer(call -> call.getArgument(0));
 
-        service.execute(ORDER_ID, RESTAURANT_ID);
+        service.execute(ORDER_ID, EMPLOYEE_ID, RESTAURANT_ID);
 
         InOrder order = inOrder(smsNotificationPort, orderRepositoryPort);
         order.verify(smsNotificationPort).send(anyString(), anyString());
@@ -113,7 +114,7 @@ class MarkOrderReadyServiceTest {
         doThrow(new IntegrationUnavailableException("Messaging service is unavailable", null))
                 .when(smsNotificationPort).send(anyString(), anyString());
 
-        assertThatThrownBy(() -> service.execute(ORDER_ID, RESTAURANT_ID))
+        assertThatThrownBy(() -> service.execute(ORDER_ID, EMPLOYEE_ID, RESTAURANT_ID))
                 .isInstanceOf(IntegrationUnavailableException.class);
         verify(orderRepositoryPort, never()).save(any());
     }
@@ -124,7 +125,7 @@ class MarkOrderReadyServiceTest {
         when(orderRepositoryPort.findById(ORDER_ID)).thenReturn(Optional.of(order(status)));
         when(pinGeneratorPort.generate()).thenReturn("048213");
 
-        assertThatThrownBy(() -> service.execute(ORDER_ID, RESTAURANT_ID))
+        assertThatThrownBy(() -> service.execute(ORDER_ID, EMPLOYEE_ID, RESTAURANT_ID))
                 .isInstanceOf(InvalidOrderStatusException.class);
         verify(smsNotificationPort, never()).send(anyString(), anyString());
         verify(orderRepositoryPort, never()).save(any());
@@ -134,15 +135,25 @@ class MarkOrderReadyServiceTest {
     void rejectsAnOrderOfAnotherRestaurant() {
         when(orderRepositoryPort.findById(ORDER_ID)).thenReturn(Optional.of(order(OrderStatus.EN_PREPARACION)));
 
-        assertThatThrownBy(() -> service.execute(ORDER_ID, 2L)).isInstanceOf(ForbiddenOperationException.class);
+        assertThatThrownBy(() -> service.execute(ORDER_ID, EMPLOYEE_ID, 2L)).isInstanceOf(ForbiddenOperationException.class);
         verify(smsNotificationPort, never()).send(anyString(), anyString());
+    }
+
+    @Test
+    void onlyTheAssignedEmployeeCanMarkTheOrderAsReady() {
+        when(orderRepositoryPort.findById(ORDER_ID)).thenReturn(Optional.of(order(OrderStatus.EN_PREPARACION)));
+
+        assertThatThrownBy(() -> service.execute(ORDER_ID, 10L, RESTAURANT_ID))
+                .isInstanceOf(ForbiddenOperationException.class).hasMessageContaining("another employee");
+        verify(smsNotificationPort, never()).send(anyString(), anyString());
+        verify(orderRepositoryPort, never()).save(any());
     }
 
     @Test
     void rejectsAnUnknownOrder() {
         when(orderRepositoryPort.findById(ORDER_ID)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> service.execute(ORDER_ID, RESTAURANT_ID)).isInstanceOf(OrderNotFoundException.class);
+        assertThatThrownBy(() -> service.execute(ORDER_ID, EMPLOYEE_ID, RESTAURANT_ID)).isInstanceOf(OrderNotFoundException.class);
     }
 
     @Test
@@ -150,7 +161,7 @@ class MarkOrderReadyServiceTest {
         orderInPreparationWithPin("048213");
         when(userRepositoryPort.findRegisteredById(CLIENT_ID)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> service.execute(ORDER_ID, RESTAURANT_ID)).isInstanceOf(UserNotFoundException.class);
+        assertThatThrownBy(() -> service.execute(ORDER_ID, EMPLOYEE_ID, RESTAURANT_ID)).isInstanceOf(UserNotFoundException.class);
         verify(orderRepositoryPort, never()).save(any());
     }
 
@@ -159,7 +170,7 @@ class MarkOrderReadyServiceTest {
         orderInPreparationWithPin("048213");
         clientHasPhone(" ");
 
-        assertThatThrownBy(() -> service.execute(ORDER_ID, RESTAURANT_ID)).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> service.execute(ORDER_ID, EMPLOYEE_ID, RESTAURANT_ID)).isInstanceOf(IllegalArgumentException.class);
         verify(smsNotificationPort, never()).send(anyString(), anyString());
     }
 
@@ -169,7 +180,7 @@ class MarkOrderReadyServiceTest {
         clientHasPhone(PHONE);
         when(orderRepositoryPort.save(any())).thenAnswer(call -> call.getArgument(0));
 
-        OrderResponse response = service.execute(ORDER_ID, RESTAURANT_ID);
+        OrderResponse response = service.execute(ORDER_ID, EMPLOYEE_ID, RESTAURANT_ID);
 
         assertThat(OrderResponse.class.getDeclaredFields()).extracting(java.lang.reflect.Field::getName)
                 .noneMatch(name -> name.toLowerCase().contains("pin"));
