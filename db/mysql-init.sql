@@ -48,6 +48,34 @@ CREATE TABLE IF NOT EXISTS dishes (
     KEY idx_dishes_restaurant_active (restaurant_id, active)
 ) ENGINE = InnoDB;
 
+-- HU-11 Realizar pedido
+-- client_id es el id del cliente en el microservicio de usuarios (otra base de
+-- datos), por eso NO tiene llave foránea. status: PENDIENTE, EN_PREPARACION,
+-- LISTO, ENTREGADO o CANCELADO.
+CREATE TABLE IF NOT EXISTS orders (
+    id            BIGINT      NOT NULL AUTO_INCREMENT,
+    client_id     BIGINT      NOT NULL,
+    restaurant_id BIGINT      NOT NULL,
+    status        VARCHAR(20) NOT NULL,
+    created_at    DATETIME(6) NOT NULL,
+    PRIMARY KEY (id),
+    CONSTRAINT fk_orders_restaurant FOREIGN KEY (restaurant_id) REFERENCES restaurants (id),
+    KEY idx_orders_client_status (client_id, status),
+    KEY idx_orders_restaurant_status (restaurant_id, status)
+) ENGINE = InnoDB;
+
+-- HU-11 Platos de cada pedido con su cantidad
+CREATE TABLE IF NOT EXISTS order_items (
+    id       BIGINT NOT NULL AUTO_INCREMENT,
+    order_id BIGINT NOT NULL,
+    dish_id  BIGINT NOT NULL,
+    quantity INT    NOT NULL,
+    PRIMARY KEY (id),
+    CONSTRAINT fk_order_items_order FOREIGN KEY (order_id) REFERENCES orders (id),
+    CONSTRAINT fk_order_items_dish FOREIGN KEY (dish_id) REFERENCES dishes (id),
+    CONSTRAINT chk_order_items_quantity_positive CHECK (quantity > 0)
+) ENGINE = InnoDB;
+
 -- Usuario de conexión del microservicio (debe coincidir con .env)
 CREATE USER IF NOT EXISTS 'plazoleta_user'@'%'         IDENTIFIED BY 'plazoleta_pass';
 CREATE USER IF NOT EXISTS 'plazoleta_user'@'localhost' IDENTIFIED BY 'plazoleta_pass';
