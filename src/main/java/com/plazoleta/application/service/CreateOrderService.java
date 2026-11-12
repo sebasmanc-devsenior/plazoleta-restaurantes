@@ -9,6 +9,7 @@ import com.plazoleta.application.dto.OrderResponse;
 import com.plazoleta.application.port.input.CreateOrderUseCase;
 import com.plazoleta.application.port.output.DishRepositoryPort;
 import com.plazoleta.application.port.output.OrderRepositoryPort;
+import com.plazoleta.application.port.output.OrderTraceabilityPort;
 import com.plazoleta.application.port.output.RestaurantRepositoryPort;
 import com.plazoleta.application.port.output.UserRepositoryPort;
 import com.plazoleta.domain.exception.ActiveOrderExistsException;
@@ -28,15 +29,17 @@ public class CreateOrderService implements CreateOrderUseCase {
     private final DishRepositoryPort dishRepositoryPort;
     private final RestaurantRepositoryPort restaurantRepositoryPort;
     private final UserRepositoryPort userRepositoryPort;
+    private final OrderTraceabilityPort orderTraceabilityPort;
     private final Clock clock;
 
     public CreateOrderService(OrderRepositoryPort orderRepositoryPort, DishRepositoryPort dishRepositoryPort,
                               RestaurantRepositoryPort restaurantRepositoryPort, UserRepositoryPort userRepositoryPort,
-                              Clock clock) {
+                              OrderTraceabilityPort orderTraceabilityPort, Clock clock) {
         this.orderRepositoryPort = orderRepositoryPort;
         this.dishRepositoryPort = dishRepositoryPort;
         this.restaurantRepositoryPort = restaurantRepositoryPort;
         this.userRepositoryPort = userRepositoryPort;
+        this.orderTraceabilityPort = orderTraceabilityPort;
         this.clock = clock;
     }
 
@@ -84,6 +87,9 @@ public class CreateOrderService implements CreateOrderUseCase {
                 throw new IllegalArgumentException("Dish " + dish.getId() + " is not available");
             }
         }
-        return OrderResponse.from(orderRepositoryPort.save(order));
+        Order saved = orderRepositoryPort.save(order);
+        // HU-17: primer registro del pedido, sin estado anterior.
+        orderTraceabilityPort.record(saved, null);
+        return OrderResponse.from(saved);
     }
 }

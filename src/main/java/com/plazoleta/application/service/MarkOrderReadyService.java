@@ -3,25 +3,30 @@ package com.plazoleta.application.service;
 import com.plazoleta.application.dto.OrderResponse;
 import com.plazoleta.application.port.input.MarkOrderReadyUseCase;
 import com.plazoleta.application.port.output.OrderRepositoryPort;
+import com.plazoleta.application.port.output.OrderTraceabilityPort;
 import com.plazoleta.application.port.output.PinGeneratorPort;
 import com.plazoleta.application.port.output.SmsNotificationPort;
 import com.plazoleta.application.port.output.UserRepositoryPort;
 import com.plazoleta.domain.exception.UserNotFoundException;
 import com.plazoleta.domain.model.Order;
+import com.plazoleta.domain.model.OrderStatus;
 import com.plazoleta.domain.model.User;
 
 public class MarkOrderReadyService implements MarkOrderReadyUseCase {
     private final OrderRepositoryPort orderRepositoryPort;
+    private final OrderTraceabilityPort orderTraceabilityPort;
     private final UserRepositoryPort userRepositoryPort;
     private final PinGeneratorPort pinGeneratorPort;
     private final SmsNotificationPort smsNotificationPort;
 
     public MarkOrderReadyService(OrderRepositoryPort orderRepositoryPort, UserRepositoryPort userRepositoryPort,
-                                 PinGeneratorPort pinGeneratorPort, SmsNotificationPort smsNotificationPort) {
+                                 PinGeneratorPort pinGeneratorPort, SmsNotificationPort smsNotificationPort,
+                                 OrderTraceabilityPort orderTraceabilityPort) {
         this.orderRepositoryPort = orderRepositoryPort;
         this.userRepositoryPort = userRepositoryPort;
         this.pinGeneratorPort = pinGeneratorPort;
         this.smsNotificationPort = smsNotificationPort;
+        this.orderTraceabilityPort = orderTraceabilityPort;
     }
 
     @Override
@@ -30,6 +35,7 @@ public class MarkOrderReadyService implements MarkOrderReadyUseCase {
                 employeeRestaurantId);
         AssignOrderService.requireAssignedEmployee(order, employeeId);
         String pin = pinGeneratorPort.generate();
+        OrderStatus previousStatus = order.getStatus();
         order.markReady(pin);
 
         // El teléfono del cliente vive en el microservicio de usuarios.
@@ -40,7 +46,9 @@ public class MarkOrderReadyService implements MarkOrderReadyUseCase {
         }
         // Primero se envía el SMS: si falla, el pedido no se guarda como listo y se puede reintentar.
         smsNotificationPort.send(client.getPhone(), readyMessage(order.getId(), pin));
-        return OrderResponse.from(orderRepositoryPort.save(order));
+        Order saved = orderRepositoryPort.save(order);
+        orderTraceabilityPort.record(saved, previousStatus);
+        return OrderResponse.from(saved);
     }
 
     static String readyMessage(Long orderId, String pin) {
