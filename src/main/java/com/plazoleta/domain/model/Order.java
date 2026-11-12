@@ -16,6 +16,7 @@ public class Order {
     private final LocalDateTime createdAt;
     private final List<OrderItem> items;
     private Long employeeId;
+    private String securityPin;
 
     public Order(Long id, Long clientId, Long restaurantId, OrderStatus status, LocalDateTime createdAt,
                  List<OrderItem> items) {
@@ -24,6 +25,11 @@ public class Order {
 
     public Order(Long id, Long clientId, Long restaurantId, OrderStatus status, LocalDateTime createdAt,
                  List<OrderItem> items, Long employeeId) {
+        this(id, clientId, restaurantId, status, createdAt, items, employeeId, null);
+    }
+
+    public Order(Long id, Long clientId, Long restaurantId, OrderStatus status, LocalDateTime createdAt,
+                 List<OrderItem> items, Long employeeId, String securityPin) {
         if (clientId == null) {
             throw new IllegalArgumentException("Client is required");
         }
@@ -46,6 +52,7 @@ public class Order {
         this.createdAt = createdAt;
         this.items = List.copyOf(items);
         this.employeeId = employeeId;
+        this.securityPin = securityPin;
     }
 
     /** HU-11: todo pedido nuevo queda en estado PENDIENTE. */
@@ -65,6 +72,19 @@ public class Order {
         this.status = OrderStatus.EN_PREPARACION;
     }
 
+    /** HU-14: el pedido pasa de EN_PREPARACION a LISTO y guarda el PIN con el que el cliente lo reclama. */
+    public void markReady(String securityPin) {
+        if (securityPin == null || securityPin.isBlank()) {
+            throw new IllegalArgumentException("Security PIN is required");
+        }
+        if (status != OrderStatus.EN_PREPARACION) {
+            throw new InvalidOrderStatusException("Only EN_PREPARACION orders can be marked as ready; this order is "
+                    + status);
+        }
+        this.securityPin = securityPin;
+        this.status = OrderStatus.LISTO;
+    }
+
     public Long getId() { return id; }
     public Long getClientId() { return clientId; }
     public Long getRestaurantId() { return restaurantId; }
@@ -72,4 +92,5 @@ public class Order {
     public LocalDateTime getCreatedAt() { return createdAt; }
     public List<OrderItem> getItems() { return items; }
     public Long getEmployeeId() { return employeeId; }
+    public String getSecurityPin() { return securityPin; }
 }

@@ -52,6 +52,10 @@ public class OrderEntity {
     @Column(name = "employee_id")
     private Long employeeId;
 
+    /** HU-14: PIN que se le envía al cliente por SMS cuando el pedido queda listo. */
+    @Column(name = "security_pin", length = 6)
+    private String securityPin;
+
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
     private List<OrderItemEntity> items = new ArrayList<>();
 
@@ -66,6 +70,7 @@ public class OrderEntity {
         entity.status = order.getStatus();
         entity.createdAt = order.getCreatedAt();
         entity.employeeId = order.getEmployeeId();
+        entity.securityPin = order.getSecurityPin();
         order.getItems().forEach(item -> entity.items.add(
                 new OrderItemEntity(entity, DishEntity.reference(item.getDishId()), item.getQuantity())));
         return entity;
@@ -75,11 +80,12 @@ public class OrderEntity {
     public void applyChanges(Order order) {
         this.status = order.getStatus();
         this.employeeId = order.getEmployeeId();
+        this.securityPin = order.getSecurityPin();
     }
 
     public Order toDomain() {
         return new Order(id, clientId, restaurant.getId(), status, createdAt,
-                items.stream().map(OrderItemEntity::toDomain).toList(), employeeId);
+                items.stream().map(OrderItemEntity::toDomain).toList(), employeeId, securityPin);
     }
 
     public Long getId() { return id; }
