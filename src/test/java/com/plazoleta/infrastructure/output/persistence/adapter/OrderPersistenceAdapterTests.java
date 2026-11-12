@@ -136,4 +136,28 @@ class OrderPersistenceAdapterTests {
         assertThat(orders.findByRestaurantAndStatus(restaurantId, OrderStatus.LISTO, 0, 10).getContent())
                 .singleElement().satisfies(listed -> assertThat(listed.getId()).isEqualTo(orderId));
     }
+
+    /** HU-15: al entregarse, la fila queda en ENTREGADO y deja de contar como pedido en proceso del cliente. */
+    @Test
+    void savesTheDeliveredOrderAndFreesTheClientToOrderAgain() {
+        Long restaurantId = restaurants.save(new Restaurant(null, "Sabor Paisa", "900123456", "Calle 10",
+                "+573001112233", "https://logo.png", 2L)).getId();
+        Long dishId = dishes.save(new Dish(null, "Bandeja", 32000, "d", "https://i.png", "Almuerzos",
+                restaurantId, true)).getId();
+        Long orderId = orders.save(Order.create(7L, restaurantId, List.of(new OrderItem(dishId, 3)),
+                LocalDateTime.of(2026, 11, 10, 12, 0))).getId();
+        Order order = orders.findById(orderId).orElseThrow();
+        order.assignTo(9L);
+        order.markReady("048213");
+        order.deliver("048213");
+        orders.save(order);
+        entityManager.flush();
+        entityManager.clear();
+
+        Order found = orders.findById(orderId).orElseThrow();
+        assertThat(found.getStatus()).isEqualTo(OrderStatus.ENTREGADO);
+        assertThat(found.getEmployeeId()).isEqualTo(9L);
+        assertThat(orders.existsByClientIdAndStatusIn(7L, OrderStatus.IN_PROCESS)).isFalse();
+        assertThat(orders.findByRestaurantAndStatus(restaurantId, OrderStatus.LISTO, 0, 10).getContent()).isEmpty();
+    }
 }
