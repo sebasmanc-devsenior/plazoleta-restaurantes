@@ -160,4 +160,26 @@ class OrderPersistenceAdapterTests {
         assertThat(orders.existsByClientIdAndStatusIn(7L, OrderStatus.IN_PROCESS)).isFalse();
         assertThat(orders.findByRestaurantAndStatus(restaurantId, OrderStatus.LISTO, 0, 10).getContent()).isEmpty();
     }
+
+    /** HU-16: al cancelarse, la fila queda en CANCELADO y el cliente puede volver a pedir. */
+    @Test
+    void savesTheCancelledOrderAndFreesTheClientToOrderAgain() {
+        Long restaurantId = restaurants.save(new Restaurant(null, "Sabor Paisa", "900123456", "Calle 10",
+                "+573001112233", "https://logo.png", 2L)).getId();
+        Long dishId = dishes.save(new Dish(null, "Bandeja", 32000, "d", "https://i.png", "Almuerzos",
+                restaurantId, true)).getId();
+        Long orderId = orders.save(Order.create(7L, restaurantId, List.of(new OrderItem(dishId, 3)),
+                LocalDateTime.of(2026, 11, 10, 12, 0))).getId();
+        assertThat(orders.existsByClientIdAndStatusIn(7L, OrderStatus.IN_PROCESS)).isTrue();
+
+        Order order = orders.findById(orderId).orElseThrow();
+        order.cancel();
+        orders.save(order);
+        entityManager.flush();
+        entityManager.clear();
+
+        assertThat(orders.findById(orderId).orElseThrow().getStatus()).isEqualTo(OrderStatus.CANCELADO);
+        assertThat(orders.existsByClientIdAndStatusIn(7L, OrderStatus.IN_PROCESS)).isFalse();
+        assertThat(orders.findByRestaurantAndStatus(restaurantId, OrderStatus.PENDIENTE, 0, 10).getContent()).isEmpty();
+    }
 }

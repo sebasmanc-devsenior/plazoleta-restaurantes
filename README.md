@@ -25,6 +25,7 @@ Cada historia se desarrolló en su propia rama y se unió a `main` en orden.
 | 13 | Asignarse a un pedido: queda el empleado asignado y pasa a EN_PREPARACION | `historia13-asignarse-pedido` |
 | 14 | Notificar pedido listo: el empleado asignado lo pasa a LISTO y el microservicio de mensajería envía un SMS con el PIN | `historia14-notificar-pedido-listo` |
 | 15 | Entregar pedido: el empleado asignado digita el PIN del cliente y pasa de LISTO a ENTREGADO | `historia15-entregar-pedido` |
+| 16 | Cancelar pedido: el cliente cancela su pedido solo si sigue PENDIENTE | `historia16-cancelar-pedido` |
 
 ## Arquitectura hexagonal (arquetipo del curso)
 

@@ -10,6 +10,10 @@ import com.plazoleta.domain.exception.InvalidSecurityPinException;
 
 /** Pedido de un cliente a un restaurante. */
 public class Order {
+    /** HU-16: mensaje exigido por el criterio de aceptación cuando el pedido ya no está PENDIENTE. */
+    public static final String CANNOT_CANCEL_MESSAGE =
+            "Lo sentimos, tu pedido ya está en preparación y no puede cancelarse";
+
     private final Long id;
     private final Long clientId;
     private final Long restaurantId;
@@ -101,6 +105,14 @@ public class Order {
             throw new InvalidSecurityPinException("The security PIN is not correct");
         }
         this.status = OrderStatus.ENTREGADO;
+    }
+
+    /** HU-16: solo un pedido PENDIENTE se puede cancelar. */
+    public void cancel() {
+        if (status != OrderStatus.PENDIENTE) {
+            throw new InvalidOrderStatusException(CANNOT_CANCEL_MESSAGE);
+        }
+        this.status = OrderStatus.CANCELADO;
     }
 
     public Long getId() { return id; }
