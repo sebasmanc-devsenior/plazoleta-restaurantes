@@ -111,4 +111,29 @@ class OrderPersistenceAdapterTests {
                 .singleElement().satisfies(listed -> assertThat(listed.getEmployeeId()).isEqualTo(9L));
         assertThat(orders.findById(orderId + 1000)).isEmpty();
     }
+
+    /** HU-14: al quedar listo, la fila guarda el PIN y el estado LISTO, y conserva el empleado asignado. */
+    @Test
+    void savesTheSecurityPinWhenTheOrderIsReady() {
+        Long restaurantId = restaurants.save(new Restaurant(null, "Sabor Paisa", "900123456", "Calle 10",
+                "+573001112233", "https://logo.png", 2L)).getId();
+        Long dishId = dishes.save(new Dish(null, "Bandeja", 32000, "d", "https://i.png", "Almuerzos",
+                restaurantId, true)).getId();
+        Long orderId = orders.save(Order.create(7L, restaurantId, List.of(new OrderItem(dishId, 3)),
+                LocalDateTime.of(2026, 11, 10, 12, 0))).getId();
+        Order order = orders.findById(orderId).orElseThrow();
+        assertThat(order.getSecurityPin()).isNull();
+        order.assignTo(9L);
+        order.markReady("048213");
+        orders.save(order);
+        entityManager.flush();
+        entityManager.clear();
+
+        Order found = orders.findById(orderId).orElseThrow();
+        assertThat(found.getStatus()).isEqualTo(OrderStatus.LISTO);
+        assertThat(found.getSecurityPin()).isEqualTo("048213");
+        assertThat(found.getEmployeeId()).isEqualTo(9L);
+        assertThat(orders.findByRestaurantAndStatus(restaurantId, OrderStatus.LISTO, 0, 10).getContent())
+                .singleElement().satisfies(listed -> assertThat(listed.getId()).isEqualTo(orderId));
+    }
 }
