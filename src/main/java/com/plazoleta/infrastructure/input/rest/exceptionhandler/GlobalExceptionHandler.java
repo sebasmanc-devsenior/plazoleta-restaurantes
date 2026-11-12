@@ -20,6 +20,7 @@ import com.plazoleta.domain.exception.ForbiddenOperationException;
 import com.plazoleta.domain.exception.IntegrationUnavailableException;
 import com.plazoleta.domain.exception.InvalidOrderStatusException;
 import com.plazoleta.domain.exception.InvalidPriceException;
+import com.plazoleta.domain.exception.InvalidSecurityPinException;
 import com.plazoleta.domain.exception.MissingAuthenticatedUserException;
 import com.plazoleta.domain.exception.OrderNotFoundException;
 import com.plazoleta.domain.exception.RestaurantNotFoundException;
@@ -29,7 +30,7 @@ import com.plazoleta.domain.exception.UserNotFoundException;
 public class GlobalExceptionHandler {
     private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
-    @ExceptionHandler({InvalidPriceException.class, IllegalArgumentException.class})
+    @ExceptionHandler({InvalidPriceException.class, IllegalArgumentException.class, InvalidSecurityPinException.class})
     public ResponseEntity<ErrorResponse> handleBadRequest(Exception ex, HttpServletRequest request) {
         return buildResponse(HttpStatus.BAD_REQUEST, ex.getMessage(), request.getRequestURI());
     }

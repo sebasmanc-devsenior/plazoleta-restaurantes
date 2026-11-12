@@ -14,10 +14,12 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.plazoleta.application.dto.CreateOrderCommand;
+import com.plazoleta.application.dto.DeliverOrderCommand;
 import com.plazoleta.application.dto.OrderResponse;
 import com.plazoleta.application.dto.PageResult;
 import com.plazoleta.application.port.input.AssignOrderUseCase;
 import com.plazoleta.application.port.input.CreateOrderUseCase;
+import com.plazoleta.application.port.input.DeliverOrderUseCase;
 import com.plazoleta.application.port.input.ListOrdersByStatusUseCase;
 import com.plazoleta.application.port.input.MarkOrderReadyUseCase;
 import com.plazoleta.infrastructure.configuration.security.AuthenticatedUserContext;
@@ -33,13 +35,16 @@ public class OrderController {
     private final ListOrdersByStatusUseCase listOrdersByStatusUseCase;
     private final AssignOrderUseCase assignOrderUseCase;
     private final MarkOrderReadyUseCase markOrderReadyUseCase;
+    private final DeliverOrderUseCase deliverOrderUseCase;
 
     public OrderController(CreateOrderUseCase createOrderUseCase, ListOrdersByStatusUseCase listOrdersByStatusUseCase,
-                           AssignOrderUseCase assignOrderUseCase, MarkOrderReadyUseCase markOrderReadyUseCase) {
+                           AssignOrderUseCase assignOrderUseCase, MarkOrderReadyUseCase markOrderReadyUseCase,
+                           DeliverOrderUseCase deliverOrderUseCase) {
         this.createOrderUseCase = createOrderUseCase;
         this.listOrdersByStatusUseCase = listOrdersByStatusUseCase;
         this.assignOrderUseCase = assignOrderUseCase;
         this.markOrderReadyUseCase = markOrderReadyUseCase;
+        this.deliverOrderUseCase = deliverOrderUseCase;
     }
 
     @PostMapping("/orders")
@@ -85,5 +90,18 @@ public class OrderController {
         var principal = AuthenticatedUserContext.currentPrincipal();
         Long restaurantId = principal == null ? null : principal.getRestaurantId();
         return ResponseEntity.ok(markOrderReadyUseCase.execute(orderId, employeeId, restaurantId));
+    }
+
+    @PatchMapping("/orders/{orderId}/deliver")
+    @Operation(summary = "HU-15 Deliver order",
+            description = "Only the assigned EMPLEADO. The order goes from LISTO to ENTREGADO when the PIN typed by "
+                    + "the employee is the one the client received by SMS. ENTREGADO is final.")
+    public ResponseEntity<OrderResponse> deliverOrder(@PathVariable Long orderId,
+                                                      @RequestBody DeliverOrderCommand command,
+                                                      HttpServletRequest request) {
+        Long employeeId = AuthenticatedUserContext.resolveUserId(request);
+        var principal = AuthenticatedUserContext.currentPrincipal();
+        Long restaurantId = principal == null ? null : principal.getRestaurantId();
+        return ResponseEntity.ok(deliverOrderUseCase.execute(orderId, command, employeeId, restaurantId));
     }
 }
