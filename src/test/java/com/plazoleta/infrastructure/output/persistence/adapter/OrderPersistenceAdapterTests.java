@@ -20,6 +20,8 @@ import com.plazoleta.domain.model.OrderItem;
 import com.plazoleta.domain.model.OrderStatus;
 import com.plazoleta.domain.model.Restaurant;
 
+import jakarta.persistence.EntityManager;
+
 /** HU-11: el adaptador guarda el pedido con sus platos y detecta pedidos en proceso del cliente. */
 @SpringBootTest
 @Transactional
@@ -30,6 +32,8 @@ class OrderPersistenceAdapterTests {
     private DishRepositoryPort dishes;
     @Autowired
     private OrderRepositoryPort orders;
+    @Autowired
+    private EntityManager entityManager;
 
     @Test
     void savesOrderWithItemsAndFindsClientOrdersInProcess() {
@@ -76,5 +80,35 @@ class OrderPersistenceAdapterTests {
         assertThat(pending.getContent()).extracting(Order::getId).containsExactly(older, newer);
         assertThat(pending.getTotalElements()).isEqualTo(2);
         assertThat(ready.getContent()).isEmpty();
+    }
+
+    /** HU-13: al asignarse, la fila del pedido guarda el empleado y el nuevo estado, y conserva sus platos. */
+    @Test
+    void savesTheAssignedEmployeeAndTheNewStatusKeepingTheDishes() {
+        Long restaurantId = restaurants.save(new Restaurant(null, "Sabor Paisa", "900123456", "Calle 10",
+                "+573001112233", "https://logo.png", 2L)).getId();
+        Long dishId = dishes.save(new Dish(null, "Bandeja", 32000, "d", "https://i.png", "Almuerzos",
+                restaurantId, true)).getId();
+        Long orderId = orders.save(Order.create(7L, restaurantId, List.of(new OrderItem(dishId, 3)),
+                LocalDateTime.of(2026, 11, 10, 12, 0))).getId();
+        assertThat(orders.findById(orderId).orElseThrow().getEmployeeId()).isNull();
+
+        Order order = orders.findById(orderId).orElseThrow();
+        order.assignTo(9L);
+        orders.save(order);
+        entityManager.flush();
+        entityManager.clear();
+
+        Order found = orders.findById(orderId).orElseThrow();
+        assertThat(found.getEmployeeId()).isEqualTo(9L);
+        assertThat(found.getStatus()).isEqualTo(OrderStatus.EN_PREPARACION);
+        assertThat(found.getItems()).singleElement().satisfies(item -> {
+            assertThat(item.getDishId()).isEqualTo(dishId);
+            assertThat(item.getQuantity()).isEqualTo(3);
+        });
+        assertThat(orders.findByRestaurantAndStatus(restaurantId, OrderStatus.PENDIENTE, 0, 10).getContent()).isEmpty();
+        assertThat(orders.findByRestaurantAndStatus(restaurantId, OrderStatus.EN_PREPARACION, 0, 10).getContent())
+                .singleElement().satisfies(listed -> assertThat(listed.getEmployeeId()).isEqualTo(9L));
+        assertThat(orders.findById(orderId + 1000)).isEmpty();
     }
 }
