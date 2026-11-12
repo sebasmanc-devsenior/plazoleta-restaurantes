@@ -48,6 +48,10 @@ public class OrderEntity {
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
+    /** HU-13: id del empleado asignado (usuario de otro microservicio, sin llave foránea). */
+    @Column(name = "employee_id")
+    private Long employeeId;
+
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
     private List<OrderItemEntity> items = new ArrayList<>();
 
@@ -61,14 +65,21 @@ public class OrderEntity {
         entity.restaurant = RestaurantEntity.reference(order.getRestaurantId());
         entity.status = order.getStatus();
         entity.createdAt = order.getCreatedAt();
+        entity.employeeId = order.getEmployeeId();
         order.getItems().forEach(item -> entity.items.add(
                 new OrderItemEntity(entity, DishEntity.reference(item.getDishId()), item.getQuantity())));
         return entity;
     }
 
+    /** HU-13: copia a la fila existente lo único que cambia en un pedido ya creado. */
+    public void applyChanges(Order order) {
+        this.status = order.getStatus();
+        this.employeeId = order.getEmployeeId();
+    }
+
     public Order toDomain() {
         return new Order(id, clientId, restaurant.getId(), status, createdAt,
-                items.stream().map(OrderItemEntity::toDomain).toList());
+                items.stream().map(OrderItemEntity::toDomain).toList(), employeeId);
     }
 
     public Long getId() { return id; }

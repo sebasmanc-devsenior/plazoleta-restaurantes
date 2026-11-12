@@ -18,8 +18,10 @@ import com.plazoleta.domain.exception.ActiveOrderExistsException;
 import com.plazoleta.domain.exception.DishNotFoundException;
 import com.plazoleta.domain.exception.ForbiddenOperationException;
 import com.plazoleta.domain.exception.IntegrationUnavailableException;
+import com.plazoleta.domain.exception.InvalidOrderStatusException;
 import com.plazoleta.domain.exception.InvalidPriceException;
 import com.plazoleta.domain.exception.MissingAuthenticatedUserException;
+import com.plazoleta.domain.exception.OrderNotFoundException;
 import com.plazoleta.domain.exception.RestaurantNotFoundException;
 import com.plazoleta.domain.exception.UserNotFoundException;
 
@@ -42,12 +44,13 @@ public class GlobalExceptionHandler {
                 request.getRequestURI());
     }
 
-    @ExceptionHandler({UserNotFoundException.class, RestaurantNotFoundException.class, DishNotFoundException.class})
+    @ExceptionHandler({UserNotFoundException.class, RestaurantNotFoundException.class, DishNotFoundException.class,
+            OrderNotFoundException.class})
     public ResponseEntity<ErrorResponse> handleNotFound(Exception ex, HttpServletRequest request) {
         return buildResponse(HttpStatus.NOT_FOUND, ex.getMessage(), request.getRequestURI());
     }
 
-    @ExceptionHandler(ActiveOrderExistsException.class)
+    @ExceptionHandler({ActiveOrderExistsException.class, InvalidOrderStatusException.class})
     public ResponseEntity<ErrorResponse> handleConflict(Exception ex, HttpServletRequest request) {
         return buildResponse(HttpStatus.CONFLICT, ex.getMessage(), request.getRequestURI());
     }

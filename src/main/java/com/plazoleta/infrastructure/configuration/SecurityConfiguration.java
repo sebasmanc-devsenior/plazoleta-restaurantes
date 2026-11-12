@@ -55,6 +55,8 @@ public class SecurityConfiguration {
                 .requestMatchers(HttpMethod.POST, "/api/orders").hasRole("CLIENTE")
                 // HU-12: solo un empleado lista los pedidos de su restaurante.
                 .requestMatchers(HttpMethod.GET, "/api/orders").hasRole("EMPLEADO")
+                // HU-13: solo un empleado se asigna un pedido.
+                .requestMatchers(HttpMethod.PATCH, "/api/orders/*/assign").hasRole("EMPLEADO")
                 // Cualquier ruta no declarada arriba se rechaza: cerrado por defecto.
                 .anyRequest().denyAll())
             .exceptionHandling(errors -> errors
