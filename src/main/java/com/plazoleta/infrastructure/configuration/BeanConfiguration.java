@@ -9,6 +9,7 @@ import com.plazoleta.application.port.input.CreateDishUseCase;
 import com.plazoleta.application.port.input.CreateOrderUseCase;
 import com.plazoleta.application.port.input.CreateRestaurantUseCase;
 import com.plazoleta.application.port.input.GetRestaurantUseCase;
+import com.plazoleta.application.port.input.ListOrdersByStatusUseCase;
 import com.plazoleta.application.port.input.ListRestaurantDishesUseCase;
 import com.plazoleta.application.port.input.ListRestaurantsUseCase;
 import com.plazoleta.application.port.input.SetDishAvailabilityUseCase;
@@ -21,6 +22,7 @@ import com.plazoleta.application.service.CreateDishService;
 import com.plazoleta.application.service.CreateOrderService;
 import com.plazoleta.application.service.CreateRestaurantService;
 import com.plazoleta.application.service.GetRestaurantService;
+import com.plazoleta.application.service.ListOrdersByStatusService;
 import com.plazoleta.application.service.ListRestaurantDishesService;
 import com.plazoleta.application.service.ListRestaurantsService;
 import com.plazoleta.application.service.SetDishAvailabilityService;
@@ -92,5 +94,11 @@ public class BeanConfiguration {
     public CreateOrderUseCase createOrderUseCase(OrderRepositoryPort orders, DishRepositoryPort dishes,
                                                  RestaurantRepositoryPort restaurants, Clock clock) {
         return new CreateOrderService(orders, dishes, restaurants, clock);
+    }
+
+    /** HU-12 */
+    @Bean
+    public ListOrdersByStatusUseCase listOrdersByStatusUseCase(OrderRepositoryPort orders) {
+        return new ListOrdersByStatusService(orders);
     }
 }
