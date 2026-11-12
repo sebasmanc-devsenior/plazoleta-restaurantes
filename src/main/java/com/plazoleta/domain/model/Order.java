@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Set;
 
 import com.plazoleta.domain.exception.InvalidOrderStatusException;
+import com.plazoleta.domain.exception.InvalidSecurityPinException;
 
 /** Pedido de un cliente a un restaurante. */
 public class Order {
@@ -83,6 +84,23 @@ public class Order {
         }
         this.securityPin = securityPin;
         this.status = OrderStatus.LISTO;
+    }
+
+    /**
+     * HU-15: el pedido pasa de LISTO a ENTREGADO solo si el PIN digitado es el que recibió el cliente.
+     * ENTREGADO es un estado final: ningún método de esta clase lo acepta como punto de partida.
+     */
+    public void deliver(String pin) {
+        if (status != OrderStatus.LISTO) {
+            throw new InvalidOrderStatusException("Only LISTO orders can be delivered; this order is " + status);
+        }
+        if (pin == null || pin.isBlank()) {
+            throw new IllegalArgumentException("Security PIN is required");
+        }
+        if (!pin.trim().equals(securityPin)) {
+            throw new InvalidSecurityPinException("The security PIN is not correct");
+        }
+        this.status = OrderStatus.ENTREGADO;
     }
 
     public Long getId() { return id; }
