@@ -57,6 +57,8 @@ public class SecurityConfiguration {
                 .requestMatchers(HttpMethod.GET, "/api/orders").hasRole("EMPLEADO")
                 // HU-13: solo un empleado se asigna un pedido.
                 .requestMatchers(HttpMethod.PATCH, "/api/orders/*/assign").hasRole("EMPLEADO")
+                // HU-14: solo un empleado marca un pedido como listo.
+                .requestMatchers(HttpMethod.PATCH, "/api/orders/*/ready").hasRole("EMPLEADO")
                 // Cualquier ruta no declarada arriba se rechaza: cerrado por defecto.
                 .anyRequest().denyAll())
             .exceptionHandling(errors -> errors

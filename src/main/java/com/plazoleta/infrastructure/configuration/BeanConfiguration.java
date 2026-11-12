@@ -11,12 +11,15 @@ import com.plazoleta.application.port.input.CreateOrderUseCase;
 import com.plazoleta.application.port.input.CreateRestaurantUseCase;
 import com.plazoleta.application.port.input.GetRestaurantUseCase;
 import com.plazoleta.application.port.input.ListOrdersByStatusUseCase;
+import com.plazoleta.application.port.input.MarkOrderReadyUseCase;
 import com.plazoleta.application.port.input.ListRestaurantDishesUseCase;
 import com.plazoleta.application.port.input.ListRestaurantsUseCase;
 import com.plazoleta.application.port.input.SetDishAvailabilityUseCase;
 import com.plazoleta.application.port.input.UpdateDishUseCase;
 import com.plazoleta.application.port.output.DishRepositoryPort;
 import com.plazoleta.application.port.output.OrderRepositoryPort;
+import com.plazoleta.application.port.output.PinGeneratorPort;
+import com.plazoleta.application.port.output.SmsNotificationPort;
 import com.plazoleta.application.port.output.RestaurantRepositoryPort;
 import com.plazoleta.application.port.output.UserRepositoryPort;
 import com.plazoleta.application.service.CreateDishService;
@@ -25,6 +28,7 @@ import com.plazoleta.application.service.CreateOrderService;
 import com.plazoleta.application.service.CreateRestaurantService;
 import com.plazoleta.application.service.GetRestaurantService;
 import com.plazoleta.application.service.ListOrdersByStatusService;
+import com.plazoleta.application.service.MarkOrderReadyService;
 import com.plazoleta.application.service.ListRestaurantDishesService;
 import com.plazoleta.application.service.ListRestaurantsService;
 import com.plazoleta.application.service.SetDishAvailabilityService;
@@ -109,5 +113,12 @@ public class BeanConfiguration {
     @Bean
     public AssignOrderUseCase assignOrderUseCase(OrderRepositoryPort orders) {
         return new AssignOrderService(orders);
+    }
+
+    /** HU-14 */
+    @Bean
+    public MarkOrderReadyUseCase markOrderReadyUseCase(OrderRepositoryPort orders, UserRepositoryPort users,
+                                                       PinGeneratorPort pins, SmsNotificationPort sms) {
+        return new MarkOrderReadyService(orders, users, pins, sms);
     }
 }

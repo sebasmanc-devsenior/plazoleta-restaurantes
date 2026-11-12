@@ -19,6 +19,7 @@ import com.plazoleta.application.dto.PageResult;
 import com.plazoleta.application.port.input.AssignOrderUseCase;
 import com.plazoleta.application.port.input.CreateOrderUseCase;
 import com.plazoleta.application.port.input.ListOrdersByStatusUseCase;
+import com.plazoleta.application.port.input.MarkOrderReadyUseCase;
 import com.plazoleta.infrastructure.configuration.security.AuthenticatedUserContext;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -31,12 +32,14 @@ public class OrderController {
     private final CreateOrderUseCase createOrderUseCase;
     private final ListOrdersByStatusUseCase listOrdersByStatusUseCase;
     private final AssignOrderUseCase assignOrderUseCase;
+    private final MarkOrderReadyUseCase markOrderReadyUseCase;
 
     public OrderController(CreateOrderUseCase createOrderUseCase, ListOrdersByStatusUseCase listOrdersByStatusUseCase,
-                           AssignOrderUseCase assignOrderUseCase) {
+                           AssignOrderUseCase assignOrderUseCase, MarkOrderReadyUseCase markOrderReadyUseCase) {
         this.createOrderUseCase = createOrderUseCase;
         this.listOrdersByStatusUseCase = listOrdersByStatusUseCase;
         this.assignOrderUseCase = assignOrderUseCase;
+        this.markOrderReadyUseCase = markOrderReadyUseCase;
     }
 
     @PostMapping("/orders")
@@ -71,5 +74,15 @@ public class OrderController {
         var principal = AuthenticatedUserContext.currentPrincipal();
         Long restaurantId = principal == null ? null : principal.getRestaurantId();
         return ResponseEntity.ok(assignOrderUseCase.execute(orderId, employeeId, restaurantId));
+    }
+
+    @PatchMapping("/orders/{orderId}/ready")
+    @Operation(summary = "HU-14 Mark order as ready",
+            description = "EMPLEADO only. The order goes from EN_PREPARACION to LISTO and the client gets an SMS "
+                    + "with the security PIN to claim it. The PIN is never returned by the API.")
+    public ResponseEntity<OrderResponse> markOrderReady(@PathVariable Long orderId) {
+        var principal = AuthenticatedUserContext.currentPrincipal();
+        Long restaurantId = principal == null ? null : principal.getRestaurantId();
+        return ResponseEntity.ok(markOrderReadyUseCase.execute(orderId, restaurantId));
     }
 }

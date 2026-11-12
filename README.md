@@ -23,6 +23,7 @@ Cada historia se desarrolló en su propia rama y se unió a `main` en orden.
 | 11 | Realizar pedido: platos de un solo restaurante, queda PENDIENTE, un pedido en proceso por cliente; valida la cuenta del cliente en el microservicio de usuarios | `historia11-realizar-pedido` |
 | 12 | Listar pedidos por estado: solo los del restaurante del empleado, paginados | `historia12-listar-pedidos-por-estado` |
 | 13 | Asignarse a un pedido: queda el empleado asignado y pasa a EN_PREPARACION | `historia13-asignarse-pedido` |
+| 14 | Notificar pedido listo: pasa a LISTO y el microservicio de mensajería envía un SMS con el PIN | `historia14-notificar-pedido-listo` |
 
 ## Arquitectura hexagonal (arquetipo del curso)
 
