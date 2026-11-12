@@ -78,11 +78,12 @@ public class OrderController {
 
     @PatchMapping("/orders/{orderId}/ready")
     @Operation(summary = "HU-14 Mark order as ready",
-            description = "EMPLEADO only. The order goes from EN_PREPARACION to LISTO and the client gets an SMS "
+            description = "Only the assigned EMPLEADO. The order goes from EN_PREPARACION to LISTO and the client gets an SMS "
                     + "with the security PIN to claim it. The PIN is never returned by the API.")
-    public ResponseEntity<OrderResponse> markOrderReady(@PathVariable Long orderId) {
+    public ResponseEntity<OrderResponse> markOrderReady(@PathVariable Long orderId, HttpServletRequest request) {
+        Long employeeId = AuthenticatedUserContext.resolveUserId(request);
         var principal = AuthenticatedUserContext.currentPrincipal();
         Long restaurantId = principal == null ? null : principal.getRestaurantId();
-        return ResponseEntity.ok(markOrderReadyUseCase.execute(orderId, restaurantId));
+        return ResponseEntity.ok(markOrderReadyUseCase.execute(orderId, employeeId, restaurantId));
     }
 }

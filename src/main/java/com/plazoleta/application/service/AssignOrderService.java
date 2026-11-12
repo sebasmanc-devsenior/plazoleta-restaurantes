@@ -33,4 +33,11 @@ public class AssignOrderService implements AssignOrderUseCase {
         }
         return order;
     }
+
+    /** Desde que un empleado se asigna el pedido, solo él puede avanzarlo (HU-14 y HU-15). */
+    static void requireAssignedEmployee(Order order, Long employeeId) {
+        if (order.getEmployeeId() != null && !order.getEmployeeId().equals(employeeId)) {
+            throw new ForbiddenOperationException("The order is assigned to another employee");
+        }
+    }
 }

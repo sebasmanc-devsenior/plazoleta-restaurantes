@@ -25,9 +25,10 @@ public class MarkOrderReadyService implements MarkOrderReadyUseCase {
     }
 
     @Override
-    public OrderResponse execute(Long orderId, Long employeeRestaurantId) {
+    public OrderResponse execute(Long orderId, Long employeeId, Long employeeRestaurantId) {
         Order order = AssignOrderService.findOrderOfEmployeeRestaurant(orderRepositoryPort, orderId,
                 employeeRestaurantId);
+        AssignOrderService.requireAssignedEmployee(order, employeeId);
         String pin = pinGeneratorPort.generate();
         order.markReady(pin);
 
