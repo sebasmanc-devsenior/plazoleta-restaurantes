@@ -10,25 +10,33 @@ import com.plazoleta.application.port.input.CreateOrderUseCase;
 import com.plazoleta.application.port.output.DishRepositoryPort;
 import com.plazoleta.application.port.output.OrderRepositoryPort;
 import com.plazoleta.application.port.output.RestaurantRepositoryPort;
+import com.plazoleta.application.port.output.UserRepositoryPort;
 import com.plazoleta.domain.exception.ActiveOrderExistsException;
 import com.plazoleta.domain.exception.DishNotFoundException;
+import com.plazoleta.domain.exception.ForbiddenOperationException;
 import com.plazoleta.domain.exception.RestaurantNotFoundException;
+import com.plazoleta.domain.exception.UserNotFoundException;
 import com.plazoleta.domain.model.Dish;
 import com.plazoleta.domain.model.Order;
 import com.plazoleta.domain.model.OrderItem;
 import com.plazoleta.domain.model.OrderStatus;
+import com.plazoleta.domain.model.Role;
+import com.plazoleta.domain.model.User;
 
 public class CreateOrderService implements CreateOrderUseCase {
     private final OrderRepositoryPort orderRepositoryPort;
     private final DishRepositoryPort dishRepositoryPort;
     private final RestaurantRepositoryPort restaurantRepositoryPort;
+    private final UserRepositoryPort userRepositoryPort;
     private final Clock clock;
 
     public CreateOrderService(OrderRepositoryPort orderRepositoryPort, DishRepositoryPort dishRepositoryPort,
-                              RestaurantRepositoryPort restaurantRepositoryPort, Clock clock) {
+                              RestaurantRepositoryPort restaurantRepositoryPort, UserRepositoryPort userRepositoryPort,
+                              Clock clock) {
         this.orderRepositoryPort = orderRepositoryPort;
         this.dishRepositoryPort = dishRepositoryPort;
         this.restaurantRepositoryPort = restaurantRepositoryPort;
+        this.userRepositoryPort = userRepositoryPort;
         this.clock = clock;
     }
 
@@ -53,6 +61,12 @@ public class CreateOrderService implements CreateOrderUseCase {
                 .toList();
         Order order = Order.create(clientId, command.getRestaurantId(), items, LocalDateTime.now(clock));
 
+        // Conexión con el microservicio de usuarios: la cuenta del cliente debe existir y tener rol CLIENTE.
+        User client = userRepositoryPort.findRegisteredById(clientId)
+                .orElseThrow(() -> new UserNotFoundException("Client account was not found"));
+        if (client.getRole() != Role.CLIENTE) {
+            throw new ForbiddenOperationException("Only a client can place orders");
+        }
         if (restaurantRepositoryPort.findById(order.getRestaurantId()).isEmpty()) {
             throw new RestaurantNotFoundException("Restaurant was not found");
         }

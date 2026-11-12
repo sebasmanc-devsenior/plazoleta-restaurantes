@@ -36,6 +36,7 @@ public class OrderController {
     @PostMapping("/orders")
     @Operation(summary = "HU-11 Create order",
             description = "CLIENTE only. Dishes of one restaurant with their quantity; the order starts as PENDIENTE. "
+                    + "The client account is checked against the users service. "
                     + "Rejected with 409 while the client has another order PENDIENTE, EN_PREPARACION or LISTO.")
     public ResponseEntity<OrderResponse> createOrder(@RequestBody CreateOrderCommand command,
                                                      HttpServletRequest request) {

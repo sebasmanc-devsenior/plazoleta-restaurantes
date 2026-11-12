@@ -9,4 +9,7 @@ import com.plazoleta.domain.model.User;
  */
 public interface UserRepositoryPort {
     Optional<User> findById(Long id);
+
+    /** HU-11: consulta siempre a users-service, sin usar los datos del token, para confirmar que la cuenta existe. */
+    Optional<User> findRegisteredById(Long id);
 }

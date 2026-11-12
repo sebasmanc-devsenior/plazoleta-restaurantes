@@ -41,6 +41,15 @@ public class RemoteUserRepository implements UserRepositoryPort {
             claimUser.setRestaurantId(principal.getRestaurantId());
             return Optional.of(claimUser);
         }
+        return findRegisteredById(id);
+    }
+
+    /** Llamada HTTP a users-service: GET /internal/users/{id} con el token entre servicios. */
+    @Override
+    public Optional<User> findRegisteredById(Long id) {
+        if (id == null) {
+            return Optional.empty();
+        }
         try {
             UserDirectoryResponse response = client.get().uri("/internal/users/{id}", id)
                     .header(org.springframework.http.HttpHeaders.AUTHORIZATION, "Bearer " + internalToken)
