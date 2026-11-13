@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import java.time.Clock;
@@ -30,6 +31,7 @@ import com.plazoleta.application.dto.OrderItemCommand;
 import com.plazoleta.application.dto.OrderResponse;
 import com.plazoleta.application.port.output.DishRepositoryPort;
 import com.plazoleta.application.port.output.OrderRepositoryPort;
+import com.plazoleta.application.port.output.OrderTraceabilityPort;
 import com.plazoleta.application.port.output.RestaurantRepositoryPort;
 import com.plazoleta.application.port.output.UserRepositoryPort;
 import com.plazoleta.domain.exception.ActiveOrderExistsException;
@@ -58,13 +60,15 @@ class CreateOrderServiceTest {
     private RestaurantRepositoryPort restaurantRepositoryPort;
     @Mock
     private UserRepositoryPort userRepositoryPort;
+    @Mock
+    private OrderTraceabilityPort orderTraceabilityPort;
 
     private CreateOrderService service;
 
     @BeforeEach
     void setUp() {
         service = new CreateOrderService(orderRepositoryPort, dishRepositoryPort, restaurantRepositoryPort,
-                userRepositoryPort, CLOCK);
+                userRepositoryPort, orderTraceabilityPort, CLOCK);
     }
 
     private static Dish dish(long id, long restaurantId, boolean active) {
@@ -208,5 +212,34 @@ class CreateOrderServiceTest {
     void rejectsTheSameDishTwice() {
         assertThatThrownBy(() -> service.execute(order(new OrderItemCommand(10L, 1), new OrderItemCommand(10L, 2)),
                 CLIENT_ID)).isInstanceOf(IllegalArgumentException.class).hasMessageContaining("only once");
+    }
+
+    /** HU-17: al crearse, el pedido deja su primer registro de trazabilidad, sin estado anterior. */
+    @Test
+    void recordsTheNewOrderInTheTraceabilityService() {
+        restaurantExists(1L);
+        when(orderRepositoryPort.existsByClientIdAndStatusIn(CLIENT_ID, OrderStatus.IN_PROCESS)).thenReturn(false);
+        when(dishRepositoryPort.findById(10L)).thenReturn(Optional.of(dish(10, 1, true)));
+        when(orderRepositoryPort.save(any())).thenAnswer(call -> {
+            Order o = call.getArgument(0);
+            return new Order(50L, o.getClientId(), o.getRestaurantId(), o.getStatus(), o.getCreatedAt(), o.getItems());
+        });
+
+        service.execute(order(new OrderItemCommand(10L, 1)), CLIENT_ID);
+
+        ArgumentCaptor<Order> recorded = ArgumentCaptor.forClass(Order.class);
+        verify(orderTraceabilityPort).record(recorded.capture(), org.mockito.ArgumentMatchers.isNull());
+        assertThat(recorded.getValue().getId()).isEqualTo(50L);
+        assertThat(recorded.getValue().getStatus()).isEqualTo(OrderStatus.PENDIENTE);
+    }
+
+    @Test
+    void aRejectedOrderLeavesNoTraceabilityLog() {
+        restaurantExists(1L);
+        when(orderRepositoryPort.existsByClientIdAndStatusIn(CLIENT_ID, OrderStatus.IN_PROCESS)).thenReturn(true);
+
+        assertThatThrownBy(() -> service.execute(order(new OrderItemCommand(10L, 1)), CLIENT_ID))
+                .isInstanceOf(ActiveOrderExistsException.class);
+        verifyNoInteractions(orderTraceabilityPort);
     }
 }

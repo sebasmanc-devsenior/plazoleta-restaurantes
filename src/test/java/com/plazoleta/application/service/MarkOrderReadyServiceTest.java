@@ -8,6 +8,7 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import java.time.LocalDateTime;
@@ -26,6 +27,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.plazoleta.application.dto.OrderResponse;
 import com.plazoleta.application.port.output.OrderRepositoryPort;
+import com.plazoleta.application.port.output.OrderTraceabilityPort;
 import com.plazoleta.application.port.output.PinGeneratorPort;
 import com.plazoleta.application.port.output.SmsNotificationPort;
 import com.plazoleta.application.port.output.UserRepositoryPort;
@@ -57,6 +59,8 @@ class MarkOrderReadyServiceTest {
     private PinGeneratorPort pinGeneratorPort;
     @Mock
     private SmsNotificationPort smsNotificationPort;
+    @Mock
+    private OrderTraceabilityPort orderTraceabilityPort;
     @InjectMocks
     private MarkOrderReadyService service;
 
@@ -185,5 +189,32 @@ class MarkOrderReadyServiceTest {
         assertThat(OrderResponse.class.getDeclaredFields()).extracting(java.lang.reflect.Field::getName)
                 .noneMatch(name -> name.toLowerCase().contains("pin"));
         assertThat(response.getEmployeeId()).isEqualTo(9L);
+    }
+
+    /** HU-17: el cambio EN_PREPARACION -> LISTO queda registrado. */
+    @Test
+    void recordsTheChangeFromInPreparationToReady() {
+        orderInPreparationWithPin("048213");
+        clientHasPhone(PHONE);
+        when(orderRepositoryPort.save(any())).thenAnswer(call -> call.getArgument(0));
+
+        service.execute(ORDER_ID, EMPLOYEE_ID, RESTAURANT_ID);
+
+        ArgumentCaptor<Order> recorded = ArgumentCaptor.forClass(Order.class);
+        verify(orderTraceabilityPort).record(recorded.capture(),
+                org.mockito.ArgumentMatchers.eq(OrderStatus.EN_PREPARACION));
+        assertThat(recorded.getValue().getStatus()).isEqualTo(OrderStatus.LISTO);
+    }
+
+    @Test
+    void whenTheSmsFailsNoTraceabilityLogIsRecorded() {
+        orderInPreparationWithPin("048213");
+        clientHasPhone(PHONE);
+        doThrow(new IntegrationUnavailableException("Messaging service is unavailable", null))
+                .when(smsNotificationPort).send(anyString(), anyString());
+
+        assertThatThrownBy(() -> service.execute(ORDER_ID, EMPLOYEE_ID, RESTAURANT_ID))
+                .isInstanceOf(IntegrationUnavailableException.class);
+        verifyNoInteractions(orderTraceabilityPort);
     }
 }

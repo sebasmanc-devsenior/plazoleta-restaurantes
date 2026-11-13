@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import java.time.LocalDateTime;
@@ -22,6 +23,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.plazoleta.application.dto.OrderResponse;
 import com.plazoleta.application.port.output.OrderRepositoryPort;
+import com.plazoleta.application.port.output.OrderTraceabilityPort;
 import com.plazoleta.domain.exception.ForbiddenOperationException;
 import com.plazoleta.domain.exception.InvalidOrderStatusException;
 import com.plazoleta.domain.exception.OrderNotFoundException;
@@ -37,6 +39,8 @@ class CancelOrderServiceTest {
 
     @Mock
     private OrderRepositoryPort orderRepositoryPort;
+    @Mock
+    private OrderTraceabilityPort orderTraceabilityPort;
     @InjectMocks
     private CancelOrderService service;
 
@@ -94,5 +98,26 @@ class CancelOrderServiceTest {
 
         assertThatThrownBy(() -> cancelled.assignTo(9L)).isInstanceOf(InvalidOrderStatusException.class);
         assertThat(cancelled.getStatus()).isEqualTo(OrderStatus.CANCELADO);
+    }
+
+    /** HU-17: el cambio PENDIENTE -> CANCELADO queda registrado. */
+    @Test
+    void recordsTheChangeFromPendingToCancelled() {
+        when(orderRepositoryPort.findById(ORDER_ID)).thenReturn(Optional.of(order(OrderStatus.PENDIENTE)));
+        when(orderRepositoryPort.save(any())).thenAnswer(call -> call.getArgument(0));
+
+        service.execute(ORDER_ID, CLIENT_ID);
+
+        ArgumentCaptor<Order> recorded = ArgumentCaptor.forClass(Order.class);
+        verify(orderTraceabilityPort).record(recorded.capture(), org.mockito.ArgumentMatchers.eq(OrderStatus.PENDIENTE));
+        assertThat(recorded.getValue().getStatus()).isEqualTo(OrderStatus.CANCELADO);
+    }
+
+    @Test
+    void aRejectedCancellationLeavesNoTraceabilityLog() {
+        when(orderRepositoryPort.findById(ORDER_ID)).thenReturn(Optional.of(order(OrderStatus.LISTO)));
+
+        assertThatThrownBy(() -> service.execute(ORDER_ID, CLIENT_ID)).isInstanceOf(InvalidOrderStatusException.class);
+        verifyNoInteractions(orderTraceabilityPort);
     }
 }

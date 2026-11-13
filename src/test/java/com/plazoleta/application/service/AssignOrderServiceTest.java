@@ -6,6 +6,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import java.time.LocalDateTime;
@@ -23,6 +24,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.plazoleta.application.dto.OrderResponse;
 import com.plazoleta.application.port.output.OrderRepositoryPort;
+import com.plazoleta.application.port.output.OrderTraceabilityPort;
 import com.plazoleta.domain.exception.ForbiddenOperationException;
 import com.plazoleta.domain.exception.InvalidOrderStatusException;
 import com.plazoleta.domain.exception.OrderNotFoundException;
@@ -39,6 +41,8 @@ class AssignOrderServiceTest {
 
     @Mock
     private OrderRepositoryPort orderRepositoryPort;
+    @Mock
+    private OrderTraceabilityPort orderTraceabilityPort;
     @InjectMocks
     private AssignOrderService service;
 
@@ -107,5 +111,28 @@ class AssignOrderServiceTest {
         assertThatThrownBy(() -> service.execute(ORDER_ID, EMPLOYEE_ID, null))
                 .isInstanceOf(ForbiddenOperationException.class);
         verify(orderRepositoryPort, never()).findById(anyLong());
+    }
+
+    /** HU-17: el cambio PENDIENTE -> EN_PREPARACION queda registrado con el empleado asignado. */
+    @Test
+    void recordsTheChangeFromPendingToInPreparation() {
+        when(orderRepositoryPort.findById(ORDER_ID)).thenReturn(Optional.of(order(OrderStatus.PENDIENTE, null)));
+        when(orderRepositoryPort.save(any())).thenAnswer(call -> call.getArgument(0));
+
+        service.execute(ORDER_ID, EMPLOYEE_ID, RESTAURANT_ID);
+
+        ArgumentCaptor<Order> recorded = ArgumentCaptor.forClass(Order.class);
+        verify(orderTraceabilityPort).record(recorded.capture(), org.mockito.ArgumentMatchers.eq(OrderStatus.PENDIENTE));
+        assertThat(recorded.getValue().getStatus()).isEqualTo(OrderStatus.EN_PREPARACION);
+        assertThat(recorded.getValue().getEmployeeId()).isEqualTo(EMPLOYEE_ID);
+    }
+
+    @Test
+    void aRejectedAssignmentLeavesNoTraceabilityLog() {
+        when(orderRepositoryPort.findById(ORDER_ID)).thenReturn(Optional.of(order(OrderStatus.LISTO, 3L)));
+
+        assertThatThrownBy(() -> service.execute(ORDER_ID, EMPLOYEE_ID, RESTAURANT_ID))
+                .isInstanceOf(InvalidOrderStatusException.class);
+        verifyNoInteractions(orderTraceabilityPort);
     }
 }

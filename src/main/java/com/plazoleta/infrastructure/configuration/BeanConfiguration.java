@@ -20,6 +20,7 @@ import com.plazoleta.application.port.input.SetDishAvailabilityUseCase;
 import com.plazoleta.application.port.input.UpdateDishUseCase;
 import com.plazoleta.application.port.output.DishRepositoryPort;
 import com.plazoleta.application.port.output.OrderRepositoryPort;
+import com.plazoleta.application.port.output.OrderTraceabilityPort;
 import com.plazoleta.application.port.output.PinGeneratorPort;
 import com.plazoleta.application.port.output.SmsNotificationPort;
 import com.plazoleta.application.port.output.RestaurantRepositoryPort;
@@ -103,8 +104,8 @@ public class BeanConfiguration {
     @Bean
     public CreateOrderUseCase createOrderUseCase(OrderRepositoryPort orders, DishRepositoryPort dishes,
                                                  RestaurantRepositoryPort restaurants, UserRepositoryPort users,
-                                                 Clock clock) {
-        return new CreateOrderService(orders, dishes, restaurants, users, clock);
+                                                 OrderTraceabilityPort traceability, Clock clock) {
+        return new CreateOrderService(orders, dishes, restaurants, users, traceability, clock);
     }
 
     /** HU-12 */
@@ -115,26 +116,27 @@ public class BeanConfiguration {
 
     /** HU-13 */
     @Bean
-    public AssignOrderUseCase assignOrderUseCase(OrderRepositoryPort orders) {
-        return new AssignOrderService(orders);
+    public AssignOrderUseCase assignOrderUseCase(OrderRepositoryPort orders, OrderTraceabilityPort traceability) {
+        return new AssignOrderService(orders, traceability);
     }
 
     /** HU-14 */
     @Bean
     public MarkOrderReadyUseCase markOrderReadyUseCase(OrderRepositoryPort orders, UserRepositoryPort users,
-                                                       PinGeneratorPort pins, SmsNotificationPort sms) {
-        return new MarkOrderReadyService(orders, users, pins, sms);
+                                                       PinGeneratorPort pins, SmsNotificationPort sms,
+                                                       OrderTraceabilityPort traceability) {
+        return new MarkOrderReadyService(orders, users, pins, sms, traceability);
     }
 
     /** HU-15 */
     @Bean
-    public DeliverOrderUseCase deliverOrderUseCase(OrderRepositoryPort orders) {
-        return new DeliverOrderService(orders);
+    public DeliverOrderUseCase deliverOrderUseCase(OrderRepositoryPort orders, OrderTraceabilityPort traceability) {
+        return new DeliverOrderService(orders, traceability);
     }
 
     /** HU-16 */
     @Bean
-    public CancelOrderUseCase cancelOrderUseCase(OrderRepositoryPort orders) {
-        return new CancelOrderService(orders);
+    public CancelOrderUseCase cancelOrderUseCase(OrderRepositoryPort orders, OrderTraceabilityPort traceability) {
+        return new CancelOrderService(orders, traceability);
     }
 }
