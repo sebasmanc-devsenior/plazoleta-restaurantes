@@ -22,14 +22,17 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 
 /** HU-11: tabla orders. client_id referencia a un usuario de otro microservicio, por eso no tiene llave foránea. */
 @Entity
 @Table(name = "orders", indexes = {
         @Index(name = "idx_orders_client_status", columnList = "client_id,status"),
         @Index(name = "idx_orders_restaurant_status", columnList = "restaurant_id,status")
-})
+}, uniqueConstraints = @UniqueConstraint(name = OrderEntity.ACTIVE_CLIENT_CONSTRAINT, columnNames = "active_client_id"))
 public class OrderEntity {
+    public static final String ACTIVE_CLIENT_CONSTRAINT = "uk_orders_active_client";
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -56,6 +59,10 @@ public class OrderEntity {
     @Column(name = "security_pin", length = 6)
     private String securityPin;
 
+    /** HU-11: id del cliente solo mientras el pedido está en proceso (PENDIENTE, EN_PREPARACION o LISTO). */
+    @Column(name = "active_client_id")
+    private Long activeClientId;
+
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
     private List<OrderItemEntity> items = new ArrayList<>();
 
@@ -71,16 +78,18 @@ public class OrderEntity {
         entity.createdAt = order.getCreatedAt();
         entity.employeeId = order.getEmployeeId();
         entity.securityPin = order.getSecurityPin();
+        entity.activeClientId = activeClientIdFor(order);
         order.getItems().forEach(item -> entity.items.add(
                 new OrderItemEntity(entity, DishEntity.reference(item.getDishId()), item.getQuantity())));
         return entity;
     }
 
-    /** HU-13: copia a la fila existente lo único que cambia en un pedido ya creado. */
-    public void applyChanges(Order order) {
-        this.status = order.getStatus();
-        this.employeeId = order.getEmployeeId();
-        this.securityPin = order.getSecurityPin();
+    /**
+     * Valor de active_client_id: el id del cliente mientras el pedido está en proceso, null cuando terminó.
+     * La columna es única, así MySQL impide que un cliente tenga dos pedidos en proceso (HU-11).
+     */
+    public static Long activeClientIdFor(Order order) {
+        return OrderStatus.IN_PROCESS.contains(order.getStatus()) ? order.getClientId() : null;
     }
 
     public Order toDomain() {

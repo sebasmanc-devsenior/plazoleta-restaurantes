@@ -7,6 +7,7 @@ import com.plazoleta.application.port.output.OrderTraceabilityPort;
 import com.plazoleta.application.port.output.PinGeneratorPort;
 import com.plazoleta.application.port.output.SmsNotificationPort;
 import com.plazoleta.application.port.output.UserRepositoryPort;
+import com.plazoleta.domain.exception.InvalidOrderStatusException;
 import com.plazoleta.domain.exception.UserNotFoundException;
 import com.plazoleta.domain.model.Order;
 import com.plazoleta.domain.model.OrderStatus;
@@ -44,11 +45,21 @@ public class MarkOrderReadyService implements MarkOrderReadyUseCase {
         if (client.getPhone() == null || client.getPhone().isBlank()) {
             throw new IllegalArgumentException("The client has no phone to be notified");
         }
-        // Primero se envía el SMS: si falla, el pedido no se guarda como listo y se puede reintentar.
-        smsNotificationPort.send(client.getPhone(), readyMessage(order.getId(), pin));
-        Order saved = orderRepositoryPort.save(order);
-        orderTraceabilityPort.record(saved, previousStatus);
-        return OrderResponse.from(saved);
+        // 1) Se marca LISTO solo si sigue EN_PREPARACION en la base: un doble clic no manda dos SMS con PIN distintos.
+        if (!orderRepositoryPort.updateIfStatus(order, previousStatus)) {
+            throw new InvalidOrderStatusException(
+                    "The order was just changed; only EN_PREPARACION orders can be marked as ready");
+        }
+        // 2) Se envía el SMS. Si falla, el pedido vuelve a EN_PREPARACION sin PIN y el empleado puede reintentar.
+        try {
+            smsNotificationPort.send(client.getPhone(), readyMessage(order.getId(), pin));
+        } catch (RuntimeException smsFailure) {
+            order.undoReady();
+            orderRepositoryPort.updateIfStatus(order, OrderStatus.LISTO);
+            throw smsFailure;
+        }
+        orderTraceabilityPort.record(order, previousStatus);
+        return OrderResponse.from(order);
     }
 
     static String readyMessage(Long orderId, String pin) {
