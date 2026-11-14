@@ -62,12 +62,12 @@ class DeliverOrderServiceTest {
     @Test
     void deliversTheReadyOrderWhenThePinIsCorrect() {
         orderIs(OrderStatus.LISTO);
-        when(orderRepositoryPort.save(any())).thenAnswer(call -> call.getArgument(0));
+        when(orderRepositoryPort.updateIfStatus(any(), any())).thenReturn(true);
 
         OrderResponse response = service.execute(ORDER_ID, new DeliverOrderCommand(PIN), EMPLOYEE_ID, RESTAURANT_ID);
 
         ArgumentCaptor<Order> saved = ArgumentCaptor.forClass(Order.class);
-        verify(orderRepositoryPort).save(saved.capture());
+        verify(orderRepositoryPort).updateIfStatus(saved.capture(), any());
         assertThat(saved.getValue().getStatus()).isEqualTo(OrderStatus.ENTREGADO);
         assertThat(response.getStatus()).isEqualTo("ENTREGADO");
         assertThat(response.getEmployeeId()).isEqualTo(EMPLOYEE_ID);
@@ -76,7 +76,7 @@ class DeliverOrderServiceTest {
     @Test
     void acceptsThePinWithSpacesAround() {
         orderIs(OrderStatus.LISTO);
-        when(orderRepositoryPort.save(any())).thenAnswer(call -> call.getArgument(0));
+        when(orderRepositoryPort.updateIfStatus(any(), any())).thenReturn(true);
 
         OrderResponse response = service.execute(ORDER_ID, new DeliverOrderCommand(" " + PIN + " "), EMPLOYEE_ID,
                 RESTAURANT_ID);
@@ -93,7 +93,7 @@ class DeliverOrderServiceTest {
         assertThatThrownBy(() -> service.execute(ORDER_ID, new DeliverOrderCommand(wrongPin), EMPLOYEE_ID,
                 RESTAURANT_ID)).isInstanceOf(InvalidSecurityPinException.class);
         assertThat(ready.getStatus()).isEqualTo(OrderStatus.LISTO);
-        verify(orderRepositoryPort, never()).save(any());
+        verify(orderRepositoryPort, never()).updateIfStatus(any(), any());
     }
 
     @ParameterizedTest
@@ -104,7 +104,7 @@ class DeliverOrderServiceTest {
 
         assertThatThrownBy(() -> service.execute(ORDER_ID, new DeliverOrderCommand(pin), EMPLOYEE_ID, RESTAURANT_ID))
                 .isInstanceOf(IllegalArgumentException.class);
-        verify(orderRepositoryPort, never()).save(any());
+        verify(orderRepositoryPort, never()).updateIfStatus(any(), any());
     }
 
     @Test
@@ -120,7 +120,7 @@ class DeliverOrderServiceTest {
 
         assertThatThrownBy(() -> service.execute(ORDER_ID, new DeliverOrderCommand(PIN), EMPLOYEE_ID, RESTAURANT_ID))
                 .isInstanceOf(InvalidOrderStatusException.class);
-        verify(orderRepositoryPort, never()).save(any());
+        verify(orderRepositoryPort, never()).updateIfStatus(any(), any());
     }
 
     /** Criterio 2: un pedido entregado no vuelve a cambiar de estado por ninguna operación. */
@@ -141,7 +141,7 @@ class DeliverOrderServiceTest {
 
         assertThatThrownBy(() -> service.execute(ORDER_ID, new DeliverOrderCommand(PIN), 10L, RESTAURANT_ID))
                 .isInstanceOf(ForbiddenOperationException.class).hasMessageContaining("another employee");
-        verify(orderRepositoryPort, never()).save(any());
+        verify(orderRepositoryPort, never()).updateIfStatus(any(), any());
     }
 
     @Test
@@ -164,7 +164,7 @@ class DeliverOrderServiceTest {
     @Test
     void recordsTheChangeFromReadyToDelivered() {
         orderIs(OrderStatus.LISTO);
-        when(orderRepositoryPort.save(any())).thenAnswer(call -> call.getArgument(0));
+        when(orderRepositoryPort.updateIfStatus(any(), any())).thenReturn(true);
 
         service.execute(ORDER_ID, new DeliverOrderCommand(PIN), EMPLOYEE_ID, RESTAURANT_ID);
 
@@ -179,6 +179,17 @@ class DeliverOrderServiceTest {
 
         assertThatThrownBy(() -> service.execute(ORDER_ID, new DeliverOrderCommand("000000"), EMPLOYEE_ID,
                 RESTAURANT_ID)).isInstanceOf(InvalidSecurityPinException.class);
+        verifyNoInteractions(orderTraceabilityPort);
+    }
+
+    /** Concurrencia: una entrega doble simultánea solo se aplica una vez. */
+    @Test
+    void aSimultaneousSecondDeliveryAnswers409() {
+        orderIs(OrderStatus.LISTO);
+        when(orderRepositoryPort.updateIfStatus(any(), any())).thenReturn(false);
+
+        assertThatThrownBy(() -> service.execute(ORDER_ID, new DeliverOrderCommand(PIN), EMPLOYEE_ID, RESTAURANT_ID))
+                .isInstanceOf(InvalidOrderStatusException.class);
         verifyNoInteractions(orderTraceabilityPort);
     }
 }

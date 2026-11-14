@@ -1,6 +1,7 @@
 package com.plazoleta.infrastructure.output.persistence.adapter;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -14,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.plazoleta.application.port.output.DishRepositoryPort;
 import com.plazoleta.application.port.output.OrderRepositoryPort;
 import com.plazoleta.application.port.output.RestaurantRepositoryPort;
+import com.plazoleta.domain.exception.ActiveOrderExistsException;
 import com.plazoleta.domain.model.Dish;
 import com.plazoleta.domain.model.Order;
 import com.plazoleta.domain.model.OrderItem;
@@ -95,7 +97,7 @@ class OrderPersistenceAdapterTests {
 
         Order order = orders.findById(orderId).orElseThrow();
         order.assignTo(9L);
-        orders.save(order);
+        assertThat(orders.updateIfStatus(order, OrderStatus.PENDIENTE)).isTrue();
         entityManager.flush();
         entityManager.clear();
 
@@ -125,7 +127,7 @@ class OrderPersistenceAdapterTests {
         assertThat(order.getSecurityPin()).isNull();
         order.assignTo(9L);
         order.markReady("048213");
-        orders.save(order);
+        assertThat(orders.updateIfStatus(order, OrderStatus.PENDIENTE)).isTrue();
         entityManager.flush();
         entityManager.clear();
 
@@ -150,7 +152,7 @@ class OrderPersistenceAdapterTests {
         order.assignTo(9L);
         order.markReady("048213");
         order.deliver("048213");
-        orders.save(order);
+        assertThat(orders.updateIfStatus(order, OrderStatus.PENDIENTE)).isTrue();
         entityManager.flush();
         entityManager.clear();
 
@@ -174,12 +176,91 @@ class OrderPersistenceAdapterTests {
 
         Order order = orders.findById(orderId).orElseThrow();
         order.cancel();
-        orders.save(order);
+        assertThat(orders.updateIfStatus(order, OrderStatus.PENDIENTE)).isTrue();
         entityManager.flush();
         entityManager.clear();
 
         assertThat(orders.findById(orderId).orElseThrow().getStatus()).isEqualTo(OrderStatus.CANCELADO);
         assertThat(orders.existsByClientIdAndStatusIn(7L, OrderStatus.IN_PROCESS)).isFalse();
         assertThat(orders.findByRestaurantAndStatus(restaurantId, OrderStatus.PENDIENTE, 0, 10).getContent()).isEmpty();
+    }
+
+    private Long[] restaurantWithDish() {
+        Long restaurantId = restaurants.save(new Restaurant(null, "Sabor Paisa", "900123456", "Calle 10",
+                "+573001112233", "https://logo.png", 2L)).getId();
+        Long dishId = dishes.save(new Dish(null, "Bandeja", 32000, "d", "https://i.png", "Almuerzos",
+                restaurantId, true)).getId();
+        return new Long[] {restaurantId, dishId};
+    }
+
+    /** Concurrencia: dos peticiones leyeron el mismo pedido PENDIENTE; solo la primera en guardar gana. */
+    @Test
+    void aChangeBasedOnAnOutdatedReadIsRejected() {
+        Long[] ids = restaurantWithDish();
+        Long orderId = orders.save(Order.create(7L, ids[0], List.of(new OrderItem(ids[1], 1)),
+                LocalDateTime.of(2026, 11, 13, 12, 0))).getId();
+        Order readByEmployee = orders.findById(orderId).orElseThrow();
+        Order readByClient = orders.findById(orderId).orElseThrow();
+
+        readByEmployee.assignTo(9L);
+        readByClient.cancel();
+        boolean employeeWon = orders.updateIfStatus(readByEmployee, OrderStatus.PENDIENTE);
+        boolean clientWon = orders.updateIfStatus(readByClient, OrderStatus.PENDIENTE);
+        entityManager.clear();
+
+        assertThat(employeeWon).isTrue();
+        assertThat(clientWon).isFalse();
+        Order found = orders.findById(orderId).orElseThrow();
+        assertThat(found.getStatus()).isEqualTo(OrderStatus.EN_PREPARACION);
+        assertThat(found.getEmployeeId()).isEqualTo(9L);
+    }
+
+    /** Concurrencia: aunque las dos peticiones pasen la revisión previa, MySQL no deja guardar el segundo pedido. */
+    @Test
+    void theDatabaseRejectsASecondOrderInProcessForTheSameClient() {
+        Long[] ids = restaurantWithDish();
+        orders.save(Order.create(7L, ids[0], List.of(new OrderItem(ids[1], 1)), LocalDateTime.of(2026, 11, 13, 12, 0)));
+
+        assertThatThrownBy(() -> orders.save(Order.create(7L, ids[0], List.of(new OrderItem(ids[1], 2)),
+                LocalDateTime.of(2026, 11, 13, 12, 0)))).isInstanceOf(ActiveOrderExistsException.class);
+    }
+
+    /** Al terminar (entregado o cancelado) el pedido deja de ocupar el lugar, y el cliente puede volver a pedir. */
+    @Test
+    void aFinishedOrderFreesTheClientForANewOne() {
+        Long[] ids = restaurantWithDish();
+        Long firstId = orders.save(Order.create(7L, ids[0], List.of(new OrderItem(ids[1], 1)),
+                LocalDateTime.of(2026, 11, 13, 12, 0))).getId();
+        Order first = orders.findById(firstId).orElseThrow();
+        first.cancel();
+        assertThat(orders.updateIfStatus(first, OrderStatus.PENDIENTE)).isTrue();
+
+        Order second = orders.save(Order.create(7L, ids[0], List.of(new OrderItem(ids[1], 1)),
+                LocalDateTime.of(2026, 11, 13, 12, 5)));
+        Order third = orders.save(Order.create(8L, ids[0], List.of(new OrderItem(ids[1], 1)),
+                LocalDateTime.of(2026, 11, 13, 12, 6)));
+
+        assertThat(second.getId()).isNotNull();
+        assertThat(third.getId()).isNotNull();
+    }
+
+    /** HU-14: si el SMS falla, el pedido vuelve de LISTO a EN_PREPARACION y pierde el PIN. */
+    @Test
+    void anOrderCanGoBackFromReadyToInPreparation() {
+        Long[] ids = restaurantWithDish();
+        Long orderId = orders.save(Order.create(7L, ids[0], List.of(new OrderItem(ids[1], 1)),
+                LocalDateTime.of(2026, 11, 13, 12, 0))).getId();
+        Order order = orders.findById(orderId).orElseThrow();
+        order.assignTo(9L);
+        order.markReady("048213");
+        assertThat(orders.updateIfStatus(order, OrderStatus.PENDIENTE)).isTrue();
+        order.undoReady();
+        assertThat(orders.updateIfStatus(order, OrderStatus.LISTO)).isTrue();
+        entityManager.clear();
+
+        Order found = orders.findById(orderId).orElseThrow();
+        assertThat(found.getStatus()).isEqualTo(OrderStatus.EN_PREPARACION);
+        assertThat(found.getSecurityPin()).isNull();
+        assertThat(found.getEmployeeId()).isEqualTo(9L);
     }
 }
