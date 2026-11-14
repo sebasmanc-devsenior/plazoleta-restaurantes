@@ -1,5 +1,6 @@
 package com.plazoleta.infrastructure.output.http;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import java.time.Duration;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -9,7 +10,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
-import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
@@ -29,13 +29,16 @@ public class RemoteOrderTraceabilityAdapter implements OrderTraceabilityPort {
     private final RestClient client;
     private final String internalToken;
 
-    public RemoteOrderTraceabilityAdapter(
-            @Value("${app.traceability.base-url}") String baseUrl,
-            @Value("${app.internal.token}") String internalToken) {
-        SimpleClientHttpRequestFactory requestFactory = new SimpleClientHttpRequestFactory();
-        requestFactory.setConnectTimeout(Duration.ofSeconds(2));
-        requestFactory.setReadTimeout(Duration.ofSeconds(3));
-        this.client = RestClient.builder().baseUrl(baseUrl).requestFactory(requestFactory).build();
+    /** Constructor para las pruebas: usa los tiempos de espera por defecto. */
+    public RemoteOrderTraceabilityAdapter(String baseUrl, String internalToken) {
+        this(baseUrl, internalToken, HttpClients.DEFAULT_CONNECT_TIMEOUT, HttpClients.DEFAULT_READ_TIMEOUT);
+    }
+
+    @Autowired
+    public RemoteOrderTraceabilityAdapter(@Value("${app.traceability.base-url}") String baseUrl, @Value("${app.internal.token}") String internalToken,
+            @Value("${app.http.connect-timeout:2s}") Duration connectTimeout,
+            @Value("${app.http.read-timeout:5s}") Duration readTimeout) {
+        this.client = HttpClients.restClient(baseUrl, connectTimeout, readTimeout);
         this.internalToken = internalToken;
     }
 
