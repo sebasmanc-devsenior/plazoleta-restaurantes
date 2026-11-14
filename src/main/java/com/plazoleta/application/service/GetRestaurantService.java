@@ -19,10 +19,10 @@ public class GetRestaurantService implements GetRestaurantUseCase {
     @Override
     public RestaurantResponse execute(Long restaurantId) {
         if (restaurantId == null) {
-            throw new IllegalArgumentException("Restaurant id is required");
+            throw new IllegalArgumentException("El id del restaurante es obligatorio");
         }
         var restaurant = restaurantRepositoryPort.findById(restaurantId)
-                .orElseThrow(() -> new RestaurantNotFoundException("Restaurant was not found"));
+                .orElseThrow(() -> new RestaurantNotFoundException("El restaurante no existe"));
         return new RestaurantResponse(restaurant.getId(), restaurant.getName(), restaurant.getNit(),
                 restaurant.getAddress(), restaurant.getPhone(), restaurant.getLogoUrl(), restaurant.getOwnerUserId());
     }

@@ -68,9 +68,9 @@ public class SecurityConfiguration {
             .exceptionHandling(errors -> errors
                 // Sin token o con token inválido: 401. Con token pero sin permisos: 403.
                 .authenticationEntryPoint((request, response, ex) ->
-                        writeError(request, response, HttpStatus.UNAUTHORIZED, "Authentication is required"))
+                        writeError(request, response, HttpStatus.UNAUTHORIZED, "Se requiere autenticación"))
                 .accessDeniedHandler((request, response, ex) ->
-                        writeError(request, response, HttpStatus.FORBIDDEN, "Insufficient permissions")))
+                        writeError(request, response, HttpStatus.FORBIDDEN, "No tienes permisos para esta operación")))
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
             .addFilterAfter(new InternalServiceTokenFilter(internalToken), JwtAuthenticationFilter.class);

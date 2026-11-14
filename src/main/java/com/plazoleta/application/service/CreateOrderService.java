@@ -46,18 +46,18 @@ public class CreateOrderService implements CreateOrderUseCase {
     @Override
     public OrderResponse execute(CreateOrderCommand command, Long clientId) {
         if (command == null) {
-            throw new IllegalArgumentException("Request body is required");
+            throw new IllegalArgumentException("El cuerpo de la petición es obligatorio");
         }
         if (command.getRestaurantId() == null) {
-            throw new IllegalArgumentException("Restaurant is required");
+            throw new IllegalArgumentException("El restaurante es obligatorio");
         }
         if (command.getDishes() == null || command.getDishes().isEmpty()) {
-            throw new IllegalArgumentException("An order needs at least one dish");
+            throw new IllegalArgumentException("El pedido debe tener al menos un plato");
         }
         List<OrderItem> items = command.getDishes().stream()
                 .map(item -> {
                     if (item == null) {
-                        throw new IllegalArgumentException("Each order item needs a dishId");
+                        throw new IllegalArgumentException("Cada plato del pedido necesita un dishId");
                     }
                     return new OrderItem(item.getDishId(), item.getQuantity());
                 })
@@ -66,25 +66,25 @@ public class CreateOrderService implements CreateOrderUseCase {
 
         // Conexión con el microservicio de usuarios: la cuenta del cliente debe existir y tener rol CLIENTE.
         User client = userRepositoryPort.findRegisteredById(clientId)
-                .orElseThrow(() -> new UserNotFoundException("Client account was not found"));
+                .orElseThrow(() -> new UserNotFoundException("La cuenta del cliente no existe"));
         if (client.getRole() != Role.CLIENTE) {
-            throw new ForbiddenOperationException("Only a client can place orders");
+            throw new ForbiddenOperationException("Solo un cliente puede hacer pedidos");
         }
         if (restaurantRepositoryPort.findById(order.getRestaurantId()).isEmpty()) {
-            throw new RestaurantNotFoundException("Restaurant was not found");
+            throw new RestaurantNotFoundException("El restaurante no existe");
         }
         if (orderRepositoryPort.existsByClientIdAndStatusIn(clientId, OrderStatus.IN_PROCESS)) {
             throw new ActiveOrderExistsException(
-                    "You already have an order in progress (pending, in preparation or ready)");
+                    "Ya tienes un pedido en proceso (pendiente, en preparación o listo)");
         }
         for (OrderItem item : order.getItems()) {
             Dish dish = dishRepositoryPort.findById(item.getDishId())
-                    .orElseThrow(() -> new DishNotFoundException("Dish " + item.getDishId() + " was not found"));
+                    .orElseThrow(() -> new DishNotFoundException("El plato " + item.getDishId() + " no existe"));
             if (!dish.getRestaurantId().equals(order.getRestaurantId())) {
-                throw new IllegalArgumentException("All dishes must belong to the selected restaurant");
+                throw new IllegalArgumentException("Todos los platos deben ser del restaurante seleccionado");
             }
             if (!dish.isActive()) {
-                throw new IllegalArgumentException("Dish " + dish.getId() + " is not available");
+                throw new IllegalArgumentException("El plato " + dish.getId() + " no está disponible");
             }
         }
         Order saved = orderRepositoryPort.save(order);

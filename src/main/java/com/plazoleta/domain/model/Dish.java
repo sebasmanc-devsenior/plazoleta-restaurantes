@@ -31,31 +31,31 @@ public class Dish {
 
     public void validate() {
         if (name == null || name.isBlank()) {
-            throw new IllegalArgumentException("Dish name is required");
+            throw new IllegalArgumentException("El nombre del plato es obligatorio");
         }
         if (price == null || price <= 0) {
-            throw new InvalidPriceException("Price must be an integer greater than 0");
+            throw new InvalidPriceException("El precio debe ser un número entero mayor que 0");
         }
         if (description == null || description.isBlank()) {
-            throw new IllegalArgumentException("Description is required");
+            throw new IllegalArgumentException("La descripción es obligatoria");
         }
         if (imageUrl == null || imageUrl.isBlank()) {
-            throw new IllegalArgumentException("Image URL is required");
+            throw new IllegalArgumentException("La URL de la imagen es obligatoria");
         }
         if (category == null || category.isBlank()) {
-            throw new IllegalArgumentException("Category is required");
+            throw new IllegalArgumentException("La categoría es obligatoria");
         }
         if (restaurantId == null) {
-            throw new IllegalArgumentException("Restaurant is required");
+            throw new IllegalArgumentException("El restaurante es obligatorio");
         }
     }
 
     public void updatePriceAndDescription(Integer newPrice, String newDescription) {
         if (newPrice == null || newPrice <= 0) {
-            throw new InvalidPriceException("Price must be greater than 0");
+            throw new InvalidPriceException("El precio debe ser mayor que 0");
         }
         if (newDescription == null || newDescription.isBlank()) {
-            throw new IllegalArgumentException("Description is required");
+            throw new IllegalArgumentException("La descripción es obligatoria");
         }
         this.price = newPrice;
         this.description = newDescription;

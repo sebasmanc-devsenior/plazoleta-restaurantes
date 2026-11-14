@@ -12,7 +12,7 @@ public final class AuthenticatedUserContext {
     public static Long resolveUserId(HttpServletRequest request) {
         Long userId = resolveUserIdFromSecurityContext();
         if (userId == null) {
-            throw new MissingAuthenticatedUserException("No authenticated user available");
+            throw new MissingAuthenticatedUserException("No hay un usuario autenticado");
         }
         return userId;
     }
@@ -34,7 +34,7 @@ public final class AuthenticatedUserContext {
     public static void requireRole(String role) {
         AuthenticatedUserPrincipal principal = currentPrincipal();
         if (principal == null || !role.equals(principal.getRole())) {
-            throw new org.springframework.security.access.AccessDeniedException("Insufficient role");
+            throw new org.springframework.security.access.AccessDeniedException("Rol insuficiente");
         }
     }
 }

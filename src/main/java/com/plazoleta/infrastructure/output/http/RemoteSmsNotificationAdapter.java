@@ -43,10 +43,10 @@ public class RemoteSmsNotificationAdapter implements SmsNotificationPort {
                     .body(Map.of("phone", phone, "message", message))
                     .retrieve().toBodilessEntity();
         } catch (RestClientResponseException ex) {
-            throw new IntegrationUnavailableException("Messaging service rejected the SMS (HTTP "
+            throw new IntegrationUnavailableException("El servicio de mensajería rechazó el SMS (HTTP "
                     + ex.getStatusCode().value() + ")", ex);
         } catch (RestClientException ex) {
-            throw new IntegrationUnavailableException("Messaging service is unavailable", ex);
+            throw new IntegrationUnavailableException("El servicio de mensajería no está disponible", ex);
         }
     }
 }

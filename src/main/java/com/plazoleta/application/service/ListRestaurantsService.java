@@ -23,7 +23,7 @@ public class ListRestaurantsService implements ListRestaurantsUseCase {
 
     static void validatePage(int page, int size) {
         if (page < 0 || size < 1 || size > 100) {
-            throw new IllegalArgumentException("Page must be >= 0 and size must be between 1 and 100");
+            throw new IllegalArgumentException("La página debe ser 0 o mayor y el tamaño debe estar entre 1 y 100");
         }
     }
 }

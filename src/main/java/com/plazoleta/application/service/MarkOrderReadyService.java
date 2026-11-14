@@ -41,14 +41,14 @@ public class MarkOrderReadyService implements MarkOrderReadyUseCase {
 
         // El teléfono del cliente vive en el microservicio de usuarios.
         User client = userRepositoryPort.findRegisteredById(order.getClientId())
-                .orElseThrow(() -> new UserNotFoundException("Client account was not found"));
+                .orElseThrow(() -> new UserNotFoundException("La cuenta del cliente no existe"));
         if (client.getPhone() == null || client.getPhone().isBlank()) {
-            throw new IllegalArgumentException("The client has no phone to be notified");
+            throw new IllegalArgumentException("El cliente no tiene un teléfono para notificarle");
         }
         // 1) Se marca LISTO solo si sigue EN_PREPARACION en la base: un doble clic no manda dos SMS con PIN distintos.
         if (!orderRepositoryPort.updateIfStatus(order, previousStatus)) {
             throw new InvalidOrderStatusException(
-                    "The order was just changed; only EN_PREPARACION orders can be marked as ready");
+                    "El pedido acaba de cambiar; solo se marcan como listos los pedidos EN_PREPARACION");
         }
         // 2) Se envía el SMS. Si falla, el pedido vuelve a EN_PREPARACION sin PIN y el empleado puede reintentar.
         try {

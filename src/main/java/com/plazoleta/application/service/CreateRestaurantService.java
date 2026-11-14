@@ -22,17 +22,17 @@ public class CreateRestaurantService implements CreateRestaurantUseCase {
     @Override
     public RestaurantResponse execute(CreateRestaurantCommand command) {
         if (command == null) {
-            throw new IllegalArgumentException("Request body is required");
+            throw new IllegalArgumentException("El cuerpo de la petición es obligatorio");
         }
         if (command.getOwnerUserId() == null) {
-            throw new IllegalArgumentException("Restaurant owner is required");
+            throw new IllegalArgumentException("El propietario del restaurante es obligatorio");
         }
 
         User owner = userRepositoryPort.findById(command.getOwnerUserId())
-                .orElseThrow(() -> new UserNotFoundException("Owner user was not found"));
+                .orElseThrow(() -> new UserNotFoundException("El usuario propietario no existe"));
 
         if (owner.getRole() != Role.PROPIETARIO) {
-            throw new IllegalArgumentException("The user must have the PROPIETARIO role");
+            throw new IllegalArgumentException("El usuario debe tener el rol PROPIETARIO");
         }
 
         Restaurant restaurant = new Restaurant(null, command.getName(), command.getNit(), command.getAddress(),

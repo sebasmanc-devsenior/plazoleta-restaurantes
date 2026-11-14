@@ -21,10 +21,10 @@ public class ListRestaurantDishesService implements ListRestaurantDishesUseCase 
     public PageResult<DishResponse> execute(Long restaurantId, String category, int page, int size) {
         ListRestaurantsService.validatePage(page, size);
         if (restaurantId == null) {
-            throw new IllegalArgumentException("Restaurant id is required");
+            throw new IllegalArgumentException("El id del restaurante es obligatorio");
         }
         if (restaurantRepositoryPort.findById(restaurantId).isEmpty()) {
-            throw new RestaurantNotFoundException("Restaurant was not found");
+            throw new RestaurantNotFoundException("El restaurante no existe");
         }
         String categoryFilter = category == null || category.isBlank() ? null : category.trim();
         // El menú incluye los platos deshabilitados (HU-7): el cliente los ve con active = false,

@@ -22,7 +22,7 @@ public class DeliverOrderService implements DeliverOrderUseCase {
     public OrderResponse execute(Long orderId, DeliverOrderCommand command, Long employeeId,
                                  Long employeeRestaurantId) {
         if (command == null) {
-            throw new IllegalArgumentException("Request body is required");
+            throw new IllegalArgumentException("El cuerpo de la petición es obligatorio");
         }
         Order order = AssignOrderService.findOrderOfEmployeeRestaurant(orderRepositoryPort, orderId,
                 employeeRestaurantId);
@@ -31,7 +31,7 @@ public class DeliverOrderService implements DeliverOrderUseCase {
         order.deliver(command.getPin());
         // Solo se guarda si el pedido sigue LISTO en la base: una entrega doble no se registra dos veces.
         if (!orderRepositoryPort.updateIfStatus(order, previousStatus)) {
-            throw new InvalidOrderStatusException("The order was just changed; only LISTO orders can be delivered");
+            throw new InvalidOrderStatusException("El pedido acaba de cambiar; solo se entregan pedidos en estado LISTO");
         }
         orderTraceabilityPort.record(order, previousStatus);
         return OrderResponse.from(order);

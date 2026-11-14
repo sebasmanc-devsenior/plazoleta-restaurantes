@@ -27,25 +27,25 @@ public class Restaurant {
 
     public void validate() {
         if (name == null || name.isBlank()) {
-            throw new IllegalArgumentException("Restaurant name is required");
+            throw new IllegalArgumentException("El nombre del restaurante es obligatorio");
         }
         if (name.trim().matches("\\d+")) {
-            throw new IllegalArgumentException("Restaurant name cannot contain only numbers");
+            throw new IllegalArgumentException("El nombre del restaurante no puede tener solo números");
         }
         if (nit == null || !nit.matches("\\d+")) {
-            throw new IllegalArgumentException("NIT must contain only digits");
+            throw new IllegalArgumentException("El NIT solo puede tener dígitos");
         }
         if (address == null || address.isBlank()) {
-            throw new IllegalArgumentException("Address is required");
+            throw new IllegalArgumentException("La dirección es obligatoria");
         }
         if (phone == null || !phone.matches("(?:\\+\\d{7,12}|\\d{7,13})")) {
-            throw new IllegalArgumentException("Restaurant phone must be at most 13 characters, digits only, optionally starting with +");
+            throw new IllegalArgumentException("El teléfono del restaurante debe tener máximo 13 caracteres, solo dígitos y opcionalmente un + al inicio");
         }
         if (logoUrl == null || logoUrl.isBlank()) {
-            throw new IllegalArgumentException("Logo URL is required");
+            throw new IllegalArgumentException("La URL del logo es obligatoria");
         }
         if (ownerUserId == null) {
-            throw new IllegalArgumentException("Restaurant owner is required");
+            throw new IllegalArgumentException("El propietario del restaurante es obligatorio");
         }
     }
 

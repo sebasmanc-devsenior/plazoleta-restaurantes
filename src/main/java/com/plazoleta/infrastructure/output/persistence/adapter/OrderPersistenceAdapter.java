@@ -27,7 +27,7 @@ public class OrderPersistenceAdapter implements OrderRepositoryPort {
     @Override
     public Order save(Order order) {
         if (order.getId() != null) {
-            throw new IllegalStateException("save is only for new orders; use updateIfStatus to change an order");
+            throw new IllegalStateException("save solo crea pedidos nuevos; para cambiar un pedido usa updateIfStatus");
         }
         try {
             return orderJpaRepository.save(OrderEntity.fromDomain(order)).toDomain();
@@ -36,7 +36,7 @@ public class OrderPersistenceAdapter implements OrderRepositoryPort {
             String cause = String.valueOf(ex.getMostSpecificCause().getMessage()).toLowerCase();
             if (cause.contains(OrderEntity.ACTIVE_CLIENT_CONSTRAINT)) {
                 throw new ActiveOrderExistsException(
-                        "You already have an order in progress (pending, in preparation or ready)");
+                        "Ya tienes un pedido en proceso (pendiente, en preparación o listo)");
             }
             throw ex;
         }

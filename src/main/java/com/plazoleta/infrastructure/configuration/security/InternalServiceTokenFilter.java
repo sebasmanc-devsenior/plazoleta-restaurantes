@@ -28,7 +28,7 @@ public class InternalServiceTokenFilter extends OncePerRequestFilter {
 
     public InternalServiceTokenFilter(String internalToken) {
         if (internalToken == null || internalToken.isBlank()) {
-            throw new IllegalStateException("Set USERS_INTERNAL_TOKEN to protect internal routes");
+            throw new IllegalStateException("Configura USERS_INTERNAL_TOKEN para proteger las rutas internas");
         }
         this.expectedToken = internalToken.getBytes(StandardCharsets.UTF_8);
     }

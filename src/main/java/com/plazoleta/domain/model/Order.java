@@ -36,18 +36,18 @@ public class Order {
     public Order(Long id, Long clientId, Long restaurantId, OrderStatus status, LocalDateTime createdAt,
                  List<OrderItem> items, Long employeeId, String securityPin) {
         if (clientId == null) {
-            throw new IllegalArgumentException("Client is required");
+            throw new IllegalArgumentException("El cliente es obligatorio");
         }
         if (restaurantId == null) {
-            throw new IllegalArgumentException("Restaurant is required");
+            throw new IllegalArgumentException("El restaurante es obligatorio");
         }
         if (items == null || items.isEmpty()) {
-            throw new IllegalArgumentException("An order needs at least one dish");
+            throw new IllegalArgumentException("El pedido debe tener al menos un plato");
         }
         Set<Long> dishIds = new HashSet<>();
         for (OrderItem item : items) {
             if (!dishIds.add(item.getDishId())) {
-                throw new IllegalArgumentException("Each dish can appear only once; use the quantity field instead");
+                throw new IllegalArgumentException("Cada plato puede aparecer una sola vez; usa el campo quantity para pedir más unidades");
             }
         }
         this.id = id;
@@ -68,10 +68,10 @@ public class Order {
     /** HU-13: el empleado se asigna el pedido y este pasa de PENDIENTE a EN_PREPARACION. */
     public void assignTo(Long employeeId) {
         if (employeeId == null) {
-            throw new IllegalArgumentException("Employee is required");
+            throw new IllegalArgumentException("El empleado es obligatorio");
         }
         if (status != OrderStatus.PENDIENTE) {
-            throw new InvalidOrderStatusException("Only PENDIENTE orders can be assigned; this order is " + status);
+            throw new InvalidOrderStatusException("Solo se pueden asignar pedidos PENDIENTE; este pedido está " + status);
         }
         this.employeeId = employeeId;
         this.status = OrderStatus.EN_PREPARACION;
@@ -80,10 +80,10 @@ public class Order {
     /** HU-14: el pedido pasa de EN_PREPARACION a LISTO y guarda el PIN con el que el cliente lo reclama. */
     public void markReady(String securityPin) {
         if (securityPin == null || securityPin.isBlank()) {
-            throw new IllegalArgumentException("Security PIN is required");
+            throw new IllegalArgumentException("El PIN de seguridad es obligatorio");
         }
         if (status != OrderStatus.EN_PREPARACION) {
-            throw new InvalidOrderStatusException("Only EN_PREPARACION orders can be marked as ready; this order is "
+            throw new InvalidOrderStatusException("Solo se pueden marcar como listos los pedidos EN_PREPARACION; este pedido está "
                     + status);
         }
         this.securityPin = securityPin;
@@ -96,13 +96,13 @@ public class Order {
      */
     public void deliver(String pin) {
         if (status != OrderStatus.LISTO) {
-            throw new InvalidOrderStatusException("Only LISTO orders can be delivered; this order is " + status);
+            throw new InvalidOrderStatusException("Solo se pueden entregar pedidos LISTO; este pedido está " + status);
         }
         if (pin == null || pin.isBlank()) {
-            throw new IllegalArgumentException("Security PIN is required");
+            throw new IllegalArgumentException("El PIN de seguridad es obligatorio");
         }
         if (!pin.trim().equals(securityPin)) {
-            throw new InvalidSecurityPinException("The security PIN is not correct");
+            throw new InvalidSecurityPinException("El PIN de seguridad no es correcto");
         }
         this.status = OrderStatus.ENTREGADO;
     }
@@ -121,7 +121,7 @@ public class Order {
      */
     public void undoReady() {
         if (status != OrderStatus.LISTO) {
-            throw new InvalidOrderStatusException("Only LISTO orders can go back to EN_PREPARACION; this order is "
+            throw new InvalidOrderStatusException("Solo un pedido LISTO puede volver a EN_PREPARACION; este pedido está "
                     + status);
         }
         this.securityPin = null;
