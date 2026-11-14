@@ -113,7 +113,7 @@ class CreateRestaurantServiceTest {
 
         assertThatThrownBy(() -> service.execute(command("Restaurante", "900123456", phone)))
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("phone");
+                .hasMessageContaining("teléfono");
     }
 
     @ParameterizedTest
@@ -123,7 +123,7 @@ class CreateRestaurantServiceTest {
 
         assertThatThrownBy(() -> service.execute(command(name, "900123456", "+573005698325")))
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("only numbers");
+                .hasMessageContaining("solo números");
     }
 
     @Test

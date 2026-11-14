@@ -118,7 +118,7 @@ class MarkOrderReadyServiceTest {
         orderInPreparationWithPin("048213");
         clientHasPhone(PHONE);
         when(orderRepositoryPort.updateIfStatus(any(), any())).thenReturn(true);
-        doThrow(new IntegrationUnavailableException("Messaging service is unavailable", null))
+        doThrow(new IntegrationUnavailableException("El servicio de mensajería no está disponible", null))
                 .when(smsNotificationPort).send(anyString(), anyString());
 
         assertThatThrownBy(() -> service.execute(ORDER_ID, EMPLOYEE_ID, RESTAURANT_ID))
@@ -168,7 +168,7 @@ class MarkOrderReadyServiceTest {
         when(orderRepositoryPort.findById(ORDER_ID)).thenReturn(Optional.of(order(OrderStatus.EN_PREPARACION)));
 
         assertThatThrownBy(() -> service.execute(ORDER_ID, 10L, RESTAURANT_ID))
-                .isInstanceOf(ForbiddenOperationException.class).hasMessageContaining("another employee");
+                .isInstanceOf(ForbiddenOperationException.class).hasMessageContaining("otro empleado");
         verify(smsNotificationPort, never()).send(anyString(), anyString());
         verify(orderRepositoryPort, never()).updateIfStatus(any(), any());
     }
@@ -231,7 +231,7 @@ class MarkOrderReadyServiceTest {
         orderInPreparationWithPin("048213");
         clientHasPhone(PHONE);
         when(orderRepositoryPort.updateIfStatus(any(), any())).thenReturn(true);
-        doThrow(new IntegrationUnavailableException("Messaging service is unavailable", null))
+        doThrow(new IntegrationUnavailableException("El servicio de mensajería no está disponible", null))
                 .when(smsNotificationPort).send(anyString(), anyString());
 
         assertThatThrownBy(() -> service.execute(ORDER_ID, EMPLOYEE_ID, RESTAURANT_ID))

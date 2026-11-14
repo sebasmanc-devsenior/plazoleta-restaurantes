@@ -137,7 +137,7 @@ class CreateOrderServiceTest {
         when(dishRepositoryPort.findById(10L)).thenReturn(Optional.of(dish(10, 2, true)));
 
         assertThatThrownBy(() -> service.execute(order(new OrderItemCommand(10L, 1)), CLIENT_ID))
-                .isInstanceOf(IllegalArgumentException.class).hasMessageContaining("selected restaurant")
+                .isInstanceOf(IllegalArgumentException.class).hasMessageContaining("restaurante seleccionado")
                 .isNotInstanceOf(DishNotFoundException.class);
         verify(orderRepositoryPort, never()).save(any());
     }
@@ -148,7 +148,7 @@ class CreateOrderServiceTest {
         when(dishRepositoryPort.findById(10L)).thenReturn(Optional.of(dish(10, 1, false)));
 
         assertThatThrownBy(() -> service.execute(order(new OrderItemCommand(10L, 1)), CLIENT_ID))
-                .isInstanceOf(IllegalArgumentException.class).hasMessageContaining("not available");
+                .isInstanceOf(IllegalArgumentException.class).hasMessageContaining("no está disponible");
     }
 
     @Test
@@ -205,13 +205,13 @@ class CreateOrderServiceTest {
     @ValueSource(ints = {0, -2})
     void requiresPositiveQuantity(Integer quantity) {
         assertThatThrownBy(() -> service.execute(order(new OrderItemCommand(10L, quantity)), CLIENT_ID))
-                .isInstanceOf(IllegalArgumentException.class).hasMessageContaining("Quantity");
+                .isInstanceOf(IllegalArgumentException.class).hasMessageContaining("cantidad");
     }
 
     @Test
     void rejectsTheSameDishTwice() {
         assertThatThrownBy(() -> service.execute(order(new OrderItemCommand(10L, 1), new OrderItemCommand(10L, 2)),
-                CLIENT_ID)).isInstanceOf(IllegalArgumentException.class).hasMessageContaining("only once");
+                CLIENT_ID)).isInstanceOf(IllegalArgumentException.class).hasMessageContaining("una sola vez");
     }
 
     /** HU-17: al crearse, el pedido deja su primer registro de trazabilidad, sin estado anterior. */
