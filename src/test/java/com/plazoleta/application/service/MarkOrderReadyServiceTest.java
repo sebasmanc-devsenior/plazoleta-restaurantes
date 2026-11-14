@@ -83,7 +83,7 @@ class MarkOrderReadyServiceTest {
     void marksTheOrderAsReadyAndSendsTheClientAnSmsWithThePin() {
         orderInPreparationWithPin("048213");
         clientHasPhone(PHONE);
-        when(orderRepositoryPort.save(any())).thenAnswer(call -> call.getArgument(0));
+        when(orderRepositoryPort.updateIfStatus(any(), any())).thenReturn(true);
 
         OrderResponse response = service.execute(ORDER_ID, EMPLOYEE_ID, RESTAURANT_ID);
 
@@ -91,36 +91,56 @@ class MarkOrderReadyServiceTest {
         verify(smsNotificationPort).send(org.mockito.ArgumentMatchers.eq(PHONE), message.capture());
         assertThat(message.getValue()).contains("048213").contains("#" + ORDER_ID).contains("listo");
         ArgumentCaptor<Order> saved = ArgumentCaptor.forClass(Order.class);
-        verify(orderRepositoryPort).save(saved.capture());
+        verify(orderRepositoryPort).updateIfStatus(saved.capture(), any());
         assertThat(saved.getValue().getStatus()).isEqualTo(OrderStatus.LISTO);
         assertThat(saved.getValue().getSecurityPin()).isEqualTo("048213");
         assertThat(saved.getValue().getEmployeeId()).isEqualTo(9L);
         assertThat(response.getStatus()).isEqualTo("LISTO");
     }
 
+    /** Concurrencia: primero se marca LISTO de forma condicional y solo después se envía el SMS. */
     @Test
-    void sendsTheSmsBeforeSavingTheOrder() {
+    void marksTheOrderReadyBeforeSendingTheSms() {
         orderInPreparationWithPin("048213");
         clientHasPhone(PHONE);
-        when(orderRepositoryPort.save(any())).thenAnswer(call -> call.getArgument(0));
+        when(orderRepositoryPort.updateIfStatus(any(), any())).thenReturn(true);
 
         service.execute(ORDER_ID, EMPLOYEE_ID, RESTAURANT_ID);
 
-        InOrder order = inOrder(smsNotificationPort, orderRepositoryPort);
+        InOrder order = inOrder(orderRepositoryPort, smsNotificationPort);
+        order.verify(orderRepositoryPort).updateIfStatus(any(), org.mockito.ArgumentMatchers.eq(OrderStatus.EN_PREPARACION));
         order.verify(smsNotificationPort).send(anyString(), anyString());
-        order.verify(orderRepositoryPort).save(any());
     }
 
+    /** Si el SMS no sale, el pedido vuelve a EN_PREPARACION sin PIN para poder reintentar. */
     @Test
-    void theOrderIsNotSavedAsReadyWhenTheSmsCannotBeSent() {
+    void whenTheSmsFailsTheOrderGoesBackToInPreparationWithoutPin() {
         orderInPreparationWithPin("048213");
         clientHasPhone(PHONE);
+        when(orderRepositoryPort.updateIfStatus(any(), any())).thenReturn(true);
         doThrow(new IntegrationUnavailableException("Messaging service is unavailable", null))
                 .when(smsNotificationPort).send(anyString(), anyString());
 
         assertThatThrownBy(() -> service.execute(ORDER_ID, EMPLOYEE_ID, RESTAURANT_ID))
                 .isInstanceOf(IntegrationUnavailableException.class);
-        verify(orderRepositoryPort, never()).save(any());
+        ArgumentCaptor<Order> saved = ArgumentCaptor.forClass(Order.class);
+        verify(orderRepositoryPort).updateIfStatus(saved.capture(), org.mockito.ArgumentMatchers.eq(OrderStatus.EN_PREPARACION));
+        verify(orderRepositoryPort).updateIfStatus(any(), org.mockito.ArgumentMatchers.eq(OrderStatus.LISTO));
+        assertThat(saved.getValue().getStatus()).isEqualTo(OrderStatus.EN_PREPARACION);
+        assertThat(saved.getValue().getSecurityPin()).isNull();
+    }
+
+    /** Concurrencia: si otra petición ya lo marcó listo (doble clic), esta responde 409 y no envía otro SMS. */
+    @Test
+    void aConcurrentChangeAnswers409AndSendsNoSecondSms() {
+        orderInPreparationWithPin("048213");
+        clientHasPhone(PHONE);
+        when(orderRepositoryPort.updateIfStatus(any(), any())).thenReturn(false);
+
+        assertThatThrownBy(() -> service.execute(ORDER_ID, EMPLOYEE_ID, RESTAURANT_ID))
+                .isInstanceOf(InvalidOrderStatusException.class);
+        verifyNoInteractions(smsNotificationPort);
+        verifyNoInteractions(orderTraceabilityPort);
     }
 
     @ParameterizedTest
@@ -132,7 +152,7 @@ class MarkOrderReadyServiceTest {
         assertThatThrownBy(() -> service.execute(ORDER_ID, EMPLOYEE_ID, RESTAURANT_ID))
                 .isInstanceOf(InvalidOrderStatusException.class);
         verify(smsNotificationPort, never()).send(anyString(), anyString());
-        verify(orderRepositoryPort, never()).save(any());
+        verify(orderRepositoryPort, never()).updateIfStatus(any(), any());
     }
 
     @Test
@@ -150,7 +170,7 @@ class MarkOrderReadyServiceTest {
         assertThatThrownBy(() -> service.execute(ORDER_ID, 10L, RESTAURANT_ID))
                 .isInstanceOf(ForbiddenOperationException.class).hasMessageContaining("another employee");
         verify(smsNotificationPort, never()).send(anyString(), anyString());
-        verify(orderRepositoryPort, never()).save(any());
+        verify(orderRepositoryPort, never()).updateIfStatus(any(), any());
     }
 
     @Test
@@ -166,7 +186,7 @@ class MarkOrderReadyServiceTest {
         when(userRepositoryPort.findRegisteredById(CLIENT_ID)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> service.execute(ORDER_ID, EMPLOYEE_ID, RESTAURANT_ID)).isInstanceOf(UserNotFoundException.class);
-        verify(orderRepositoryPort, never()).save(any());
+        verify(orderRepositoryPort, never()).updateIfStatus(any(), any());
     }
 
     @Test
@@ -182,7 +202,7 @@ class MarkOrderReadyServiceTest {
     void theResponseNeverShowsThePin() {
         orderInPreparationWithPin("048213");
         clientHasPhone(PHONE);
-        when(orderRepositoryPort.save(any())).thenAnswer(call -> call.getArgument(0));
+        when(orderRepositoryPort.updateIfStatus(any(), any())).thenReturn(true);
 
         OrderResponse response = service.execute(ORDER_ID, EMPLOYEE_ID, RESTAURANT_ID);
 
@@ -196,7 +216,7 @@ class MarkOrderReadyServiceTest {
     void recordsTheChangeFromInPreparationToReady() {
         orderInPreparationWithPin("048213");
         clientHasPhone(PHONE);
-        when(orderRepositoryPort.save(any())).thenAnswer(call -> call.getArgument(0));
+        when(orderRepositoryPort.updateIfStatus(any(), any())).thenReturn(true);
 
         service.execute(ORDER_ID, EMPLOYEE_ID, RESTAURANT_ID);
 
@@ -210,6 +230,7 @@ class MarkOrderReadyServiceTest {
     void whenTheSmsFailsNoTraceabilityLogIsRecorded() {
         orderInPreparationWithPin("048213");
         clientHasPhone(PHONE);
+        when(orderRepositoryPort.updateIfStatus(any(), any())).thenReturn(true);
         doThrow(new IntegrationUnavailableException("Messaging service is unavailable", null))
                 .when(smsNotificationPort).send(anyString(), anyString());
 

@@ -5,6 +5,7 @@ import com.plazoleta.application.dto.OrderResponse;
 import com.plazoleta.application.port.input.DeliverOrderUseCase;
 import com.plazoleta.application.port.output.OrderRepositoryPort;
 import com.plazoleta.application.port.output.OrderTraceabilityPort;
+import com.plazoleta.domain.exception.InvalidOrderStatusException;
 import com.plazoleta.domain.model.Order;
 import com.plazoleta.domain.model.OrderStatus;
 
@@ -28,8 +29,11 @@ public class DeliverOrderService implements DeliverOrderUseCase {
         AssignOrderService.requireAssignedEmployee(order, employeeId);
         OrderStatus previousStatus = order.getStatus();
         order.deliver(command.getPin());
-        Order saved = orderRepositoryPort.save(order);
-        orderTraceabilityPort.record(saved, previousStatus);
-        return OrderResponse.from(saved);
+        // Solo se guarda si el pedido sigue LISTO en la base: una entrega doble no se registra dos veces.
+        if (!orderRepositoryPort.updateIfStatus(order, previousStatus)) {
+            throw new InvalidOrderStatusException("The order was just changed; only LISTO orders can be delivered");
+        }
+        orderTraceabilityPort.record(order, previousStatus);
+        return OrderResponse.from(order);
     }
 }

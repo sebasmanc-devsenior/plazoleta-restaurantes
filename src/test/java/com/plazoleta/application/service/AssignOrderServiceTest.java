@@ -54,12 +54,12 @@ class AssignOrderServiceTest {
     @Test
     void assignsThePendingOrderToTheEmployeeAndMovesItToInPreparation() {
         when(orderRepositoryPort.findById(ORDER_ID)).thenReturn(Optional.of(order(OrderStatus.PENDIENTE, null)));
-        when(orderRepositoryPort.save(any())).thenAnswer(call -> call.getArgument(0));
+        when(orderRepositoryPort.updateIfStatus(any(), any())).thenReturn(true);
 
         OrderResponse response = service.execute(ORDER_ID, EMPLOYEE_ID, RESTAURANT_ID);
 
         ArgumentCaptor<Order> saved = ArgumentCaptor.forClass(Order.class);
-        verify(orderRepositoryPort).save(saved.capture());
+        verify(orderRepositoryPort).updateIfStatus(saved.capture(), any());
         assertThat(saved.getValue().getEmployeeId()).isEqualTo(EMPLOYEE_ID);
         assertThat(saved.getValue().getStatus()).isEqualTo(OrderStatus.EN_PREPARACION);
         assertThat(response.getId()).isEqualTo(ORDER_ID);
@@ -76,7 +76,7 @@ class AssignOrderServiceTest {
 
         assertThatThrownBy(() -> service.execute(ORDER_ID, EMPLOYEE_ID, RESTAURANT_ID))
                 .isInstanceOf(InvalidOrderStatusException.class);
-        verify(orderRepositoryPort, never()).save(any());
+        verify(orderRepositoryPort, never()).updateIfStatus(any(), any());
     }
 
     @Test
@@ -95,7 +95,7 @@ class AssignOrderServiceTest {
 
         assertThatThrownBy(() -> service.execute(ORDER_ID, EMPLOYEE_ID, 2L))
                 .isInstanceOf(ForbiddenOperationException.class);
-        verify(orderRepositoryPort, never()).save(any());
+        verify(orderRepositoryPort, never()).updateIfStatus(any(), any());
     }
 
     @Test
@@ -117,7 +117,7 @@ class AssignOrderServiceTest {
     @Test
     void recordsTheChangeFromPendingToInPreparation() {
         when(orderRepositoryPort.findById(ORDER_ID)).thenReturn(Optional.of(order(OrderStatus.PENDIENTE, null)));
-        when(orderRepositoryPort.save(any())).thenAnswer(call -> call.getArgument(0));
+        when(orderRepositoryPort.updateIfStatus(any(), any())).thenReturn(true);
 
         service.execute(ORDER_ID, EMPLOYEE_ID, RESTAURANT_ID);
 
@@ -133,6 +133,18 @@ class AssignOrderServiceTest {
 
         assertThatThrownBy(() -> service.execute(ORDER_ID, EMPLOYEE_ID, RESTAURANT_ID))
                 .isInstanceOf(InvalidOrderStatusException.class);
+        verifyNoInteractions(orderTraceabilityPort);
+    }
+
+    /** Concurrencia: si otro empleado lo tomó en el mismo instante, este recibe 409 y no queda registro. */
+    @Test
+    void whenAnotherEmployeeTookTheOrderAtTheSameTimeTheAnswerIs409() {
+        when(orderRepositoryPort.findById(ORDER_ID)).thenReturn(Optional.of(order(OrderStatus.PENDIENTE, null)));
+        when(orderRepositoryPort.updateIfStatus(any(), any())).thenReturn(false);
+
+        assertThatThrownBy(() -> service.execute(ORDER_ID, EMPLOYEE_ID, RESTAURANT_ID))
+                .isInstanceOf(InvalidOrderStatusException.class);
+        verify(orderRepositoryPort).updateIfStatus(any(), org.mockito.ArgumentMatchers.eq(OrderStatus.PENDIENTE));
         verifyNoInteractions(orderTraceabilityPort);
     }
 }

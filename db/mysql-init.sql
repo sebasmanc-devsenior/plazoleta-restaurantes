@@ -57,6 +57,8 @@ CREATE TABLE IF NOT EXISTS dishes (
 -- esta columna, el microservicio la agrega solo al arrancar.
 -- HU-14: security_pin es el PIN que se le envía al cliente por SMS cuando el pedido
 -- queda LISTO; con él lo reclama (HU-15). Vacío hasta ese momento.
+-- active_client_id: el id del cliente mientras el pedido está en proceso y NULL cuando termina.
+-- Es UNIQUE, así MySQL impide dos pedidos en proceso del mismo cliente aunque lleguen a la vez (HU-11).
 CREATE TABLE IF NOT EXISTS orders (
     id            BIGINT      NOT NULL AUTO_INCREMENT,
     client_id     BIGINT      NOT NULL,
@@ -65,10 +67,12 @@ CREATE TABLE IF NOT EXISTS orders (
     created_at    DATETIME(6) NOT NULL,
     employee_id   BIGINT      NULL,
     security_pin  VARCHAR(6)  NULL,
+    active_client_id BIGINT   NULL,
     PRIMARY KEY (id),
     CONSTRAINT fk_orders_restaurant FOREIGN KEY (restaurant_id) REFERENCES restaurants (id),
     KEY idx_orders_client_status (client_id, status),
-    KEY idx_orders_restaurant_status (restaurant_id, status)
+    KEY idx_orders_restaurant_status (restaurant_id, status),
+    CONSTRAINT uk_orders_active_client UNIQUE (active_client_id)
 ) ENGINE = InnoDB;
 
 -- HU-11 Platos de cada pedido con su cantidad

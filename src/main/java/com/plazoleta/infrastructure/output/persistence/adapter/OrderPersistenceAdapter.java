@@ -3,13 +3,14 @@ package com.plazoleta.infrastructure.output.persistence.adapter;
 import java.util.Optional;
 import java.util.Set;
 
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Repository;
 
 import com.plazoleta.application.dto.PageResult;
 import com.plazoleta.application.port.output.OrderRepositoryPort;
-import com.plazoleta.domain.exception.OrderNotFoundException;
+import com.plazoleta.domain.exception.ActiveOrderExistsException;
 import com.plazoleta.domain.model.Order;
 import com.plazoleta.domain.model.OrderStatus;
 import com.plazoleta.infrastructure.output.persistence.entity.OrderEntity;
@@ -25,14 +26,27 @@ public class OrderPersistenceAdapter implements OrderRepositoryPort {
 
     @Override
     public Order save(Order order) {
-        if (order.getId() == null) {
-            return orderJpaRepository.save(OrderEntity.fromDomain(order)).toDomain();
+        if (order.getId() != null) {
+            throw new IllegalStateException("save is only for new orders; use updateIfStatus to change an order");
         }
-        // Pedido que ya existe: se actualiza su fila (estado y empleado) sin volver a crear sus platos.
-        OrderEntity entity = orderJpaRepository.findById(order.getId())
-                .orElseThrow(() -> new OrderNotFoundException("Order was not found"));
-        entity.applyChanges(order);
-        return orderJpaRepository.save(entity).toDomain();
+        try {
+            return orderJpaRepository.save(OrderEntity.fromDomain(order)).toDomain();
+        } catch (DataIntegrityViolationException ex) {
+            // Dos pedidos simultáneos del mismo cliente: la columna única active_client_id deja pasar solo uno.
+            String cause = String.valueOf(ex.getMostSpecificCause().getMessage()).toLowerCase();
+            if (cause.contains(OrderEntity.ACTIVE_CLIENT_CONSTRAINT)) {
+                throw new ActiveOrderExistsException(
+                        "You already have an order in progress (pending, in preparation or ready)");
+            }
+            throw ex;
+        }
+    }
+
+    @Override
+    public boolean updateIfStatus(Order order, OrderStatus expectedStatus) {
+        int updatedRows = orderJpaRepository.updateStatusIfCurrent(order.getId(), expectedStatus, order.getStatus(),
+                order.getEmployeeId(), order.getSecurityPin(), OrderEntity.activeClientIdFor(order));
+        return updatedRows == 1;
     }
 
     @Override

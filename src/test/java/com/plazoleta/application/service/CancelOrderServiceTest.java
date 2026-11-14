@@ -52,12 +52,12 @@ class CancelOrderServiceTest {
     @Test
     void cancelsThePendingOrderOfTheClient() {
         when(orderRepositoryPort.findById(ORDER_ID)).thenReturn(Optional.of(order(OrderStatus.PENDIENTE)));
-        when(orderRepositoryPort.save(any())).thenAnswer(call -> call.getArgument(0));
+        when(orderRepositoryPort.updateIfStatus(any(), any())).thenReturn(true);
 
         OrderResponse response = service.execute(ORDER_ID, CLIENT_ID);
 
         ArgumentCaptor<Order> saved = ArgumentCaptor.forClass(Order.class);
-        verify(orderRepositoryPort).save(saved.capture());
+        verify(orderRepositoryPort).updateIfStatus(saved.capture(), any());
         assertThat(saved.getValue().getStatus()).isEqualTo(OrderStatus.CANCELADO);
         assertThat(response.getStatus()).isEqualTo("CANCELADO");
         assertThat(response.getId()).isEqualTo(ORDER_ID);
@@ -73,7 +73,7 @@ class CancelOrderServiceTest {
                 .isInstanceOf(InvalidOrderStatusException.class)
                 .hasMessage("Lo sentimos, tu pedido ya está en preparación y no puede cancelarse");
         assertThat(order.getStatus()).isEqualTo(status);
-        verify(orderRepositoryPort, never()).save(any());
+        verify(orderRepositoryPort, never()).updateIfStatus(any(), any());
     }
 
     @Test
@@ -81,7 +81,7 @@ class CancelOrderServiceTest {
         when(orderRepositoryPort.findById(ORDER_ID)).thenReturn(Optional.of(order(OrderStatus.PENDIENTE)));
 
         assertThatThrownBy(() -> service.execute(ORDER_ID, 8L)).isInstanceOf(ForbiddenOperationException.class);
-        verify(orderRepositoryPort, never()).save(any());
+        verify(orderRepositoryPort, never()).updateIfStatus(any(), any());
     }
 
     @Test
@@ -104,7 +104,7 @@ class CancelOrderServiceTest {
     @Test
     void recordsTheChangeFromPendingToCancelled() {
         when(orderRepositoryPort.findById(ORDER_ID)).thenReturn(Optional.of(order(OrderStatus.PENDIENTE)));
-        when(orderRepositoryPort.save(any())).thenAnswer(call -> call.getArgument(0));
+        when(orderRepositoryPort.updateIfStatus(any(), any())).thenReturn(true);
 
         service.execute(ORDER_ID, CLIENT_ID);
 
@@ -118,6 +118,18 @@ class CancelOrderServiceTest {
         when(orderRepositoryPort.findById(ORDER_ID)).thenReturn(Optional.of(order(OrderStatus.LISTO)));
 
         assertThatThrownBy(() -> service.execute(ORDER_ID, CLIENT_ID)).isInstanceOf(InvalidOrderStatusException.class);
+        verifyNoInteractions(orderTraceabilityPort);
+    }
+
+    /** Concurrencia: si un empleado lo tomó en el mismo instante, el cliente recibe el mensaje del Excel. */
+    @Test
+    void whenAnEmployeeTookTheOrderAtTheSameTimeTheClientGetsTheRequiredMessage() {
+        when(orderRepositoryPort.findById(ORDER_ID)).thenReturn(Optional.of(order(OrderStatus.PENDIENTE)));
+        when(orderRepositoryPort.updateIfStatus(any(), any())).thenReturn(false);
+
+        assertThatThrownBy(() -> service.execute(ORDER_ID, CLIENT_ID))
+                .isInstanceOf(InvalidOrderStatusException.class)
+                .hasMessage("Lo sentimos, tu pedido ya está en preparación y no puede cancelarse");
         verifyNoInteractions(orderTraceabilityPort);
     }
 }

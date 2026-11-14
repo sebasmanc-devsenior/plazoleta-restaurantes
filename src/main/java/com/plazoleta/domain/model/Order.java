@@ -115,6 +115,19 @@ public class Order {
         this.status = OrderStatus.CANCELADO;
     }
 
+    /**
+     * HU-14: si el SMS con el PIN no se pudo enviar, el pedido vuelve a EN_PREPARACION y se olvida el PIN,
+     * para que el empleado pueda reintentar y el cliente nunca tenga un PIN que no recibió.
+     */
+    public void undoReady() {
+        if (status != OrderStatus.LISTO) {
+            throw new InvalidOrderStatusException("Only LISTO orders can go back to EN_PREPARACION; this order is "
+                    + status);
+        }
+        this.securityPin = null;
+        this.status = OrderStatus.EN_PREPARACION;
+    }
+
     public Long getId() { return id; }
     public Long getClientId() { return clientId; }
     public Long getRestaurantId() { return restaurantId; }

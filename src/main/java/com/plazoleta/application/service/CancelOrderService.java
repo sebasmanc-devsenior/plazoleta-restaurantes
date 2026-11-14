@@ -4,6 +4,7 @@ import com.plazoleta.application.dto.OrderResponse;
 import com.plazoleta.application.port.input.CancelOrderUseCase;
 import com.plazoleta.application.port.output.OrderRepositoryPort;
 import com.plazoleta.application.port.output.OrderTraceabilityPort;
+import com.plazoleta.domain.exception.InvalidOrderStatusException;
 import com.plazoleta.domain.exception.ForbiddenOperationException;
 import com.plazoleta.domain.exception.OrderNotFoundException;
 import com.plazoleta.domain.model.Order;
@@ -28,8 +29,12 @@ public class CancelOrderService implements CancelOrderUseCase {
         }
         OrderStatus previousStatus = order.getStatus();
         order.cancel();
-        Order saved = orderRepositoryPort.save(order);
-        orderTraceabilityPort.record(saved, previousStatus);
-        return OrderResponse.from(saved);
+        // Solo se guarda si el pedido sigue PENDIENTE en la base: si un empleado lo tomó en ese instante,
+        // el cliente recibe el mismo mensaje del criterio de aceptación.
+        if (!orderRepositoryPort.updateIfStatus(order, previousStatus)) {
+            throw new InvalidOrderStatusException(Order.CANNOT_CANCEL_MESSAGE);
+        }
+        orderTraceabilityPort.record(order, previousStatus);
+        return OrderResponse.from(order);
     }
 }

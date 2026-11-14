@@ -4,6 +4,7 @@ import com.plazoleta.application.dto.OrderResponse;
 import com.plazoleta.application.port.input.AssignOrderUseCase;
 import com.plazoleta.application.port.output.OrderRepositoryPort;
 import com.plazoleta.application.port.output.OrderTraceabilityPort;
+import com.plazoleta.domain.exception.InvalidOrderStatusException;
 import com.plazoleta.domain.exception.ForbiddenOperationException;
 import com.plazoleta.domain.exception.OrderNotFoundException;
 import com.plazoleta.domain.model.Order;
@@ -23,9 +24,13 @@ public class AssignOrderService implements AssignOrderUseCase {
         Order order = findOrderOfEmployeeRestaurant(orderRepositoryPort, orderId, employeeRestaurantId);
         OrderStatus previousStatus = order.getStatus();
         order.assignTo(employeeId);
-        Order saved = orderRepositoryPort.save(order);
-        orderTraceabilityPort.record(saved, previousStatus);
-        return OrderResponse.from(saved);
+        // Solo se guarda si el pedido sigue PENDIENTE en la base: si dos empleados compiten, gana uno.
+        if (!orderRepositoryPort.updateIfStatus(order, previousStatus)) {
+            throw new InvalidOrderStatusException(
+                    "The order was just taken or cancelled; only PENDIENTE orders can be assigned");
+        }
+        orderTraceabilityPort.record(order, previousStatus);
+        return OrderResponse.from(order);
     }
 
     /** Busca el pedido y comprueba que sea del restaurante donde trabaja el empleado (HU-13 a HU-15). */
