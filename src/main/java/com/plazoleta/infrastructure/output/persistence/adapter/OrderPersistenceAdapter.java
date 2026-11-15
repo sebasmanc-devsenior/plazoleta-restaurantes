@@ -1,5 +1,7 @@
 package com.plazoleta.infrastructure.output.persistence.adapter;
 
+import com.plazoleta.domain.util.MensajesError;
+
 import java.util.Optional;
 import java.util.Set;
 
@@ -27,7 +29,7 @@ public class OrderPersistenceAdapter implements OrderRepositoryPort {
     @Override
     public Order save(Order order) {
         if (order.getId() != null) {
-            throw new IllegalStateException("save solo crea pedidos nuevos; para cambiar un pedido usa updateIfStatus");
+            throw new IllegalStateException(MensajesError.SAVE_SOLO_CREA_PEDIDOS_NUEVOS_PARA_CAMBIAR);
         }
         try {
             return orderJpaRepository.save(OrderEntity.fromDomain(order)).toDomain();
@@ -36,7 +38,7 @@ public class OrderPersistenceAdapter implements OrderRepositoryPort {
             String cause = String.valueOf(ex.getMostSpecificCause().getMessage()).toLowerCase();
             if (cause.contains(OrderEntity.ACTIVE_CLIENT_CONSTRAINT)) {
                 throw new ActiveOrderExistsException(
-                        "Ya tienes un pedido en proceso (pendiente, en preparación o listo)");
+                        MensajesError.YA_TIENES_UN_PEDIDO_EN_PROCESO_PENDIENTE);
             }
             throw ex;
         }

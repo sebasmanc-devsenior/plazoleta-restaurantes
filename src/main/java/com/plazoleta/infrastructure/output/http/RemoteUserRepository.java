@@ -1,5 +1,7 @@
 package com.plazoleta.infrastructure.output.http;
 
+import com.plazoleta.domain.util.MensajesError;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import java.time.Duration;
 import java.util.Optional;
@@ -67,10 +69,10 @@ public class RemoteUserRepository implements UserRepositoryPort {
             if (ex.getStatusCode().value() == 404) {
                 return Optional.empty();
             }
-            throw new IntegrationUnavailableException("El servicio de usuarios rechazó la consulta (HTTP "
+            throw new IntegrationUnavailableException(MensajesError.SERVICIO_DE_USUARIOS_RECHAZO_LA_CONSULTA_HTTP
                     + ex.getStatusCode().value() + ")", ex);
         } catch (RestClientException ex) {
-            throw new IntegrationUnavailableException("El servicio de usuarios no está disponible", ex);
+            throw new IntegrationUnavailableException(MensajesError.SERVICIO_DE_USUARIOS_NO_ESTA_DISPONIBLE, ex);
         }
     }
 

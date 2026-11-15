@@ -1,5 +1,7 @@
 package com.plazoleta.application.service;
 
+import com.plazoleta.domain.util.MensajesError;
+
 import com.plazoleta.application.dto.PageResult;
 import com.plazoleta.application.dto.RestaurantListItem;
 import com.plazoleta.application.port.input.ListRestaurantsUseCase;
@@ -23,7 +25,7 @@ public class ListRestaurantsService implements ListRestaurantsUseCase {
 
     static void validatePage(int page, int size) {
         if (page < 0 || size < 1 || size > 100) {
-            throw new IllegalArgumentException("La página debe ser 0 o mayor y el tamaño debe estar entre 1 y 100");
+            throw new IllegalArgumentException(MensajesError.PAGINA_DEBE_SER_0_O_MAYOR_Y);
         }
     }
 }

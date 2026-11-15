@@ -1,5 +1,7 @@
 package com.plazoleta.application.service;
 
+import com.plazoleta.domain.util.MensajesError;
+
 import com.plazoleta.application.dto.DeliverOrderCommand;
 import com.plazoleta.application.dto.OrderResponse;
 import com.plazoleta.application.port.input.DeliverOrderUseCase;
@@ -22,7 +24,7 @@ public class DeliverOrderService implements DeliverOrderUseCase {
     public OrderResponse execute(Long orderId, DeliverOrderCommand command, Long employeeId,
                                  Long employeeRestaurantId) {
         if (command == null) {
-            throw new IllegalArgumentException("El cuerpo de la petición es obligatorio");
+            throw new IllegalArgumentException(MensajesError.CUERPO_DE_LA_PETICION_ES_OBLIGATORIO);
         }
         Order order = AssignOrderService.findOrderOfEmployeeRestaurant(orderRepositoryPort, orderId,
                 employeeRestaurantId);
@@ -31,7 +33,7 @@ public class DeliverOrderService implements DeliverOrderUseCase {
         order.deliver(command.getPin());
         // Solo se guarda si el pedido sigue LISTO en la base: una entrega doble no se registra dos veces.
         if (!orderRepositoryPort.updateIfStatus(order, previousStatus)) {
-            throw new InvalidOrderStatusException("El pedido acaba de cambiar; solo se entregan pedidos en estado LISTO");
+            throw new InvalidOrderStatusException(MensajesError.PEDIDO_ACABA_DE_CAMBIAR_SOLO_SE_ENTREGAN);
         }
         orderTraceabilityPort.record(order, previousStatus);
         return OrderResponse.from(order);

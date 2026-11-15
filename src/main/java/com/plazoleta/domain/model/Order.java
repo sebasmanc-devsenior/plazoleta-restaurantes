@@ -1,5 +1,7 @@
 package com.plazoleta.domain.model;
 
+import com.plazoleta.domain.util.MensajesError;
+
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.List;
@@ -12,7 +14,7 @@ import com.plazoleta.domain.exception.InvalidSecurityPinException;
 public class Order {
     /** HU-16: mensaje exigido por el criterio de aceptación cuando el pedido ya no está PENDIENTE. */
     public static final String CANNOT_CANCEL_MESSAGE =
-            "Lo sentimos, tu pedido ya está en preparación y no puede cancelarse";
+            MensajesError.PEDIDO_NO_CANCELABLE;
 
     private final Long id;
     private final Long clientId;
@@ -36,18 +38,18 @@ public class Order {
     public Order(Long id, Long clientId, Long restaurantId, OrderStatus status, LocalDateTime createdAt,
                  List<OrderItem> items, Long employeeId, String securityPin) {
         if (clientId == null) {
-            throw new IllegalArgumentException("El cliente es obligatorio");
+            throw new IllegalArgumentException(MensajesError.CLIENTE_ES_OBLIGATORIO);
         }
         if (restaurantId == null) {
-            throw new IllegalArgumentException("El restaurante es obligatorio");
+            throw new IllegalArgumentException(MensajesError.RESTAURANTE_ES_OBLIGATORIO);
         }
         if (items == null || items.isEmpty()) {
-            throw new IllegalArgumentException("El pedido debe tener al menos un plato");
+            throw new IllegalArgumentException(MensajesError.PEDIDO_DEBE_TENER_AL_MENOS_UN_PLATO);
         }
         Set<Long> dishIds = new HashSet<>();
         for (OrderItem item : items) {
             if (!dishIds.add(item.getDishId())) {
-                throw new IllegalArgumentException("Cada plato puede aparecer una sola vez; usa el campo quantity para pedir más unidades");
+                throw new IllegalArgumentException(MensajesError.CADA_PLATO_PUEDE_APARECER_UNA_SOLA_VEZ);
             }
         }
         this.id = id;
@@ -68,10 +70,10 @@ public class Order {
     /** HU-13: el empleado se asigna el pedido y este pasa de PENDIENTE a EN_PREPARACION. */
     public void assignTo(Long employeeId) {
         if (employeeId == null) {
-            throw new IllegalArgumentException("El empleado es obligatorio");
+            throw new IllegalArgumentException(MensajesError.EMPLEADO_ES_OBLIGATORIO);
         }
         if (status != OrderStatus.PENDIENTE) {
-            throw new InvalidOrderStatusException("Solo se pueden asignar pedidos PENDIENTE; este pedido está " + status);
+            throw new InvalidOrderStatusException(MensajesError.SOLO_SE_PUEDEN_ASIGNAR_PEDIDOS_PENDIENTE_ESTE + status);
         }
         this.employeeId = employeeId;
         this.status = OrderStatus.EN_PREPARACION;
@@ -80,10 +82,10 @@ public class Order {
     /** HU-14: el pedido pasa de EN_PREPARACION a LISTO y guarda el PIN con el que el cliente lo reclama. */
     public void markReady(String securityPin) {
         if (securityPin == null || securityPin.isBlank()) {
-            throw new IllegalArgumentException("El PIN de seguridad es obligatorio");
+            throw new IllegalArgumentException(MensajesError.PIN_DE_SEGURIDAD_ES_OBLIGATORIO);
         }
         if (status != OrderStatus.EN_PREPARACION) {
-            throw new InvalidOrderStatusException("Solo se pueden marcar como listos los pedidos EN_PREPARACION; este pedido está "
+            throw new InvalidOrderStatusException(MensajesError.SOLO_SE_PUEDEN_MARCAR_COMO_LISTOS_LOS
                     + status);
         }
         this.securityPin = securityPin;
@@ -96,13 +98,13 @@ public class Order {
      */
     public void deliver(String pin) {
         if (status != OrderStatus.LISTO) {
-            throw new InvalidOrderStatusException("Solo se pueden entregar pedidos LISTO; este pedido está " + status);
+            throw new InvalidOrderStatusException(MensajesError.SOLO_SE_PUEDEN_ENTREGAR_PEDIDOS_LISTO_ESTE + status);
         }
         if (pin == null || pin.isBlank()) {
-            throw new IllegalArgumentException("El PIN de seguridad es obligatorio");
+            throw new IllegalArgumentException(MensajesError.PIN_DE_SEGURIDAD_ES_OBLIGATORIO);
         }
         if (!pin.trim().equals(securityPin)) {
-            throw new InvalidSecurityPinException("El PIN de seguridad no es correcto");
+            throw new InvalidSecurityPinException(MensajesError.PIN_DE_SEGURIDAD_NO_ES_CORRECTO);
         }
         this.status = OrderStatus.ENTREGADO;
     }
@@ -121,7 +123,7 @@ public class Order {
      */
     public void undoReady() {
         if (status != OrderStatus.LISTO) {
-            throw new InvalidOrderStatusException("Solo un pedido LISTO puede volver a EN_PREPARACION; este pedido está "
+            throw new InvalidOrderStatusException(MensajesError.SOLO_UN_PEDIDO_LISTO_PUEDE_VOLVER_A
                     + status);
         }
         this.securityPin = null;

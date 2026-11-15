@@ -1,5 +1,7 @@
 package com.plazoleta.domain.model;
 
+import com.plazoleta.domain.util.MensajesError;
+
 import java.util.Objects;
 
 import com.plazoleta.domain.exception.InvalidPriceException;
@@ -31,31 +33,31 @@ public class Dish {
 
     public void validate() {
         if (name == null || name.isBlank()) {
-            throw new IllegalArgumentException("El nombre del plato es obligatorio");
+            throw new IllegalArgumentException(MensajesError.NOMBRE_DEL_PLATO_ES_OBLIGATORIO);
         }
         if (price == null || price <= 0) {
-            throw new InvalidPriceException("El precio debe ser un número entero mayor que 0");
+            throw new InvalidPriceException(MensajesError.PRECIO_DEBE_SER_UN_NUMERO_ENTERO_MAYOR);
         }
         if (description == null || description.isBlank()) {
-            throw new IllegalArgumentException("La descripción es obligatoria");
+            throw new IllegalArgumentException(MensajesError.DESCRIPCION_ES_OBLIGATORIA);
         }
         if (imageUrl == null || imageUrl.isBlank()) {
-            throw new IllegalArgumentException("La URL de la imagen es obligatoria");
+            throw new IllegalArgumentException(MensajesError.URL_DE_LA_IMAGEN_ES_OBLIGATORIA);
         }
         if (category == null || category.isBlank()) {
-            throw new IllegalArgumentException("La categoría es obligatoria");
+            throw new IllegalArgumentException(MensajesError.CATEGORIA_ES_OBLIGATORIA);
         }
         if (restaurantId == null) {
-            throw new IllegalArgumentException("El restaurante es obligatorio");
+            throw new IllegalArgumentException(MensajesError.RESTAURANTE_ES_OBLIGATORIO);
         }
     }
 
     public void updatePriceAndDescription(Integer newPrice, String newDescription) {
         if (newPrice == null || newPrice <= 0) {
-            throw new InvalidPriceException("El precio debe ser mayor que 0");
+            throw new InvalidPriceException(MensajesError.PRECIO_DEBE_SER_MAYOR_QUE_0);
         }
         if (newDescription == null || newDescription.isBlank()) {
-            throw new IllegalArgumentException("La descripción es obligatoria");
+            throw new IllegalArgumentException(MensajesError.DESCRIPCION_ES_OBLIGATORIA);
         }
         this.price = newPrice;
         this.description = newDescription;

@@ -1,5 +1,7 @@
 package com.plazoleta.application.service;
 
+import com.plazoleta.domain.util.MensajesError;
+
 import com.plazoleta.application.dto.RestaurantResponse;
 import com.plazoleta.application.port.input.GetRestaurantUseCase;
 import com.plazoleta.application.port.output.RestaurantRepositoryPort;
@@ -19,10 +21,10 @@ public class GetRestaurantService implements GetRestaurantUseCase {
     @Override
     public RestaurantResponse execute(Long restaurantId) {
         if (restaurantId == null) {
-            throw new IllegalArgumentException("El id del restaurante es obligatorio");
+            throw new IllegalArgumentException(MensajesError.ID_DEL_RESTAURANTE_ES_OBLIGATORIO);
         }
         var restaurant = restaurantRepositoryPort.findById(restaurantId)
-                .orElseThrow(() -> new RestaurantNotFoundException("El restaurante no existe"));
+                .orElseThrow(() -> new RestaurantNotFoundException(MensajesError.RESTAURANTE_NO_EXISTE));
         return new RestaurantResponse(restaurant.getId(), restaurant.getName(), restaurant.getNit(),
                 restaurant.getAddress(), restaurant.getPhone(), restaurant.getLogoUrl(), restaurant.getOwnerUserId());
     }

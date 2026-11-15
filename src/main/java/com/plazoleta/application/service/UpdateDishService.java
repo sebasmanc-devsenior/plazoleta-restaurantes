@@ -1,5 +1,7 @@
 package com.plazoleta.application.service;
 
+import com.plazoleta.domain.util.MensajesError;
+
 import com.plazoleta.application.dto.DishResponse;
 import com.plazoleta.application.dto.UpdateDishCommand;
 import com.plazoleta.application.port.input.UpdateDishUseCase;
@@ -27,22 +29,22 @@ public class UpdateDishService implements UpdateDishUseCase {
     @Override
     public DishResponse execute(Long dishId, UpdateDishCommand command, Long authenticatedOwnerId) {
         if (command == null) {
-            throw new IllegalArgumentException("El cuerpo de la petición es obligatorio");
+            throw new IllegalArgumentException(MensajesError.CUERPO_DE_LA_PETICION_ES_OBLIGATORIO);
         }
         User owner = userRepositoryPort.findById(authenticatedOwnerId)
-                .orElseThrow(() -> new IllegalArgumentException("El usuario autenticado no existe"));
+                .orElseThrow(() -> new IllegalArgumentException(MensajesError.USUARIO_AUTENTICADO_NO_EXISTE));
         if (owner.getRole() != Role.PROPIETARIO) {
-            throw new RestaurantOwnershipException("Solo un propietario puede modificar platos");
+            throw new RestaurantOwnershipException(MensajesError.SOLO_UN_PROPIETARIO_PUEDE_MODIFICAR_PLATOS);
         }
 
         Dish dish = dishRepositoryPort.findById(dishId)
-                .orElseThrow(() -> new DishNotFoundException("El plato no existe"));
+                .orElseThrow(() -> new DishNotFoundException(MensajesError.PLATO_NO_EXISTE));
 
         Restaurant restaurant = restaurantRepositoryPort.findById(dish.getRestaurantId())
-                .orElseThrow(() -> new IllegalArgumentException("El restaurante del plato no existe"));
+                .orElseThrow(() -> new IllegalArgumentException(MensajesError.RESTAURANTE_DEL_PLATO_NO_EXISTE));
 
         if (!restaurant.getOwnerUserId().equals(authenticatedOwnerId)) {
-            throw new RestaurantOwnershipException("El propietario no es dueño de este restaurante");
+            throw new RestaurantOwnershipException(MensajesError.PROPIETARIO_NO_ES_DUENO_DE_ESTE_RESTAURANTE);
         }
 
         dish.updatePriceAndDescription(command.getPrice(), command.getDescription());

@@ -1,5 +1,7 @@
 package com.plazoleta.application.service;
 
+import com.plazoleta.domain.util.MensajesError;
+
 import com.plazoleta.application.dto.CreateDishCommand;
 import com.plazoleta.application.dto.DishResponse;
 import com.plazoleta.application.port.input.CreateDishUseCase;
@@ -27,20 +29,20 @@ public class CreateDishService implements CreateDishUseCase {
     @Override
     public DishResponse execute(CreateDishCommand command, Long authenticatedOwnerId) {
         if (command == null) {
-            throw new IllegalArgumentException("El cuerpo de la petición es obligatorio");
+            throw new IllegalArgumentException(MensajesError.CUERPO_DE_LA_PETICION_ES_OBLIGATORIO);
         }
 
         User owner = userRepositoryPort.findById(authenticatedOwnerId)
-                .orElseThrow(() -> new IllegalArgumentException("El usuario autenticado no existe"));
+                .orElseThrow(() -> new IllegalArgumentException(MensajesError.USUARIO_AUTENTICADO_NO_EXISTE));
         if (owner.getRole() != Role.PROPIETARIO) {
-            throw new RestaurantOwnershipException("Solo un propietario puede crear platos");
+            throw new RestaurantOwnershipException(MensajesError.SOLO_UN_PROPIETARIO_PUEDE_CREAR_PLATOS);
         }
 
         Restaurant restaurant = restaurantRepositoryPort.findById(command.getRestaurantId())
-                .orElseThrow(() -> new RestaurantNotFoundException("El restaurante no existe"));
+                .orElseThrow(() -> new RestaurantNotFoundException(MensajesError.RESTAURANTE_NO_EXISTE));
 
         if (!restaurant.getOwnerUserId().equals(authenticatedOwnerId)) {
-            throw new RestaurantOwnershipException("El propietario no es dueño de este restaurante");
+            throw new RestaurantOwnershipException(MensajesError.PROPIETARIO_NO_ES_DUENO_DE_ESTE_RESTAURANTE);
         }
 
         Dish dish = new Dish(null, command.getName(), command.getPrice(), command.getDescription(), command.getImageUrl(),

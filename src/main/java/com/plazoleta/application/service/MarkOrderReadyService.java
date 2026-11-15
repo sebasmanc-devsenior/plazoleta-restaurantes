@@ -1,5 +1,7 @@
 package com.plazoleta.application.service;
 
+import com.plazoleta.domain.util.MensajesError;
+
 import com.plazoleta.application.dto.OrderResponse;
 import com.plazoleta.application.port.input.MarkOrderReadyUseCase;
 import com.plazoleta.application.port.output.OrderRepositoryPort;
@@ -41,14 +43,14 @@ public class MarkOrderReadyService implements MarkOrderReadyUseCase {
 
         // El teléfono del cliente vive en el microservicio de usuarios.
         User client = userRepositoryPort.findRegisteredById(order.getClientId())
-                .orElseThrow(() -> new UserNotFoundException("La cuenta del cliente no existe"));
+                .orElseThrow(() -> new UserNotFoundException(MensajesError.CUENTA_DEL_CLIENTE_NO_EXISTE));
         if (client.getPhone() == null || client.getPhone().isBlank()) {
-            throw new IllegalArgumentException("El cliente no tiene un teléfono para notificarle");
+            throw new IllegalArgumentException(MensajesError.CLIENTE_NO_TIENE_UN_TELEFONO_PARA_NOTIFICARLE);
         }
         // 1) Se marca LISTO solo si sigue EN_PREPARACION en la base: un doble clic no manda dos SMS con PIN distintos.
         if (!orderRepositoryPort.updateIfStatus(order, previousStatus)) {
             throw new InvalidOrderStatusException(
-                    "El pedido acaba de cambiar; solo se marcan como listos los pedidos EN_PREPARACION");
+                    MensajesError.PEDIDO_ACABA_DE_CAMBIAR_SOLO_SE_MARCAN);
         }
         // 2) Se envía el SMS. Si falla, el pedido vuelve a EN_PREPARACION sin PIN y el empleado puede reintentar.
         try {

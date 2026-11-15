@@ -1,5 +1,7 @@
 package com.plazoleta.infrastructure.configuration;
 
+import com.plazoleta.domain.util.MensajesError;
+
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 
@@ -68,9 +70,9 @@ public class SecurityConfiguration {
             .exceptionHandling(errors -> errors
                 // Sin token o con token inválido: 401. Con token pero sin permisos: 403.
                 .authenticationEntryPoint((request, response, ex) ->
-                        writeError(request, response, HttpStatus.UNAUTHORIZED, "Se requiere autenticación"))
+                        writeError(request, response, HttpStatus.UNAUTHORIZED, MensajesError.REQUIERE_AUTENTICACION))
                 .accessDeniedHandler((request, response, ex) ->
-                        writeError(request, response, HttpStatus.FORBIDDEN, "No tienes permisos para esta operación")))
+                        writeError(request, response, HttpStatus.FORBIDDEN, MensajesError.NO_TIENES_PERMISOS_PARA_ESTA_OPERACION)))
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
             .addFilterAfter(new InternalServiceTokenFilter(internalToken), JwtAuthenticationFilter.class);

@@ -1,5 +1,7 @@
 package com.plazoleta.application.service;
 
+import com.plazoleta.domain.util.MensajesError;
+
 import com.plazoleta.application.dto.OrderResponse;
 import com.plazoleta.application.port.input.AssignOrderUseCase;
 import com.plazoleta.application.port.output.OrderRepositoryPort;
@@ -27,7 +29,7 @@ public class AssignOrderService implements AssignOrderUseCase {
         // Solo se guarda si el pedido sigue PENDIENTE en la base: si dos empleados compiten, gana uno.
         if (!orderRepositoryPort.updateIfStatus(order, previousStatus)) {
             throw new InvalidOrderStatusException(
-                    "El pedido acaba de ser tomado o cancelado; solo se pueden asignar pedidos PENDIENTE");
+                    MensajesError.PEDIDO_ACABA_DE_SER_TOMADO_O_CANCELADO);
         }
         orderTraceabilityPort.record(order, previousStatus);
         return OrderResponse.from(order);
@@ -36,12 +38,12 @@ public class AssignOrderService implements AssignOrderUseCase {
     /** Busca el pedido y comprueba que sea del restaurante donde trabaja el empleado (HU-13 a HU-15). */
     static Order findOrderOfEmployeeRestaurant(OrderRepositoryPort orders, Long orderId, Long employeeRestaurantId) {
         if (employeeRestaurantId == null) {
-            throw new ForbiddenOperationException("El empleado no está vinculado a un restaurante");
+            throw new ForbiddenOperationException(MensajesError.EMPLEADO_NO_ESTA_VINCULADO_A_UN_RESTAURANTE);
         }
         Order order = orders.findById(orderId)
-                .orElseThrow(() -> new OrderNotFoundException("El pedido no existe"));
+                .orElseThrow(() -> new OrderNotFoundException(MensajesError.PEDIDO_NO_EXISTE));
         if (!order.getRestaurantId().equals(employeeRestaurantId)) {
-            throw new ForbiddenOperationException("El pedido pertenece a otro restaurante");
+            throw new ForbiddenOperationException(MensajesError.PEDIDO_PERTENECE_A_OTRO_RESTAURANTE);
         }
         return order;
     }
@@ -49,7 +51,7 @@ public class AssignOrderService implements AssignOrderUseCase {
     /** Desde que un empleado se asigna el pedido, solo él puede avanzarlo (HU-14 y HU-15). */
     static void requireAssignedEmployee(Order order, Long employeeId) {
         if (order.getEmployeeId() != null && !order.getEmployeeId().equals(employeeId)) {
-            throw new ForbiddenOperationException("El pedido está asignado a otro empleado");
+            throw new ForbiddenOperationException(MensajesError.PEDIDO_ESTA_ASIGNADO_A_OTRO_EMPLEADO);
         }
     }
 }

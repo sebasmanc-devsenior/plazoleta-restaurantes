@@ -1,5 +1,7 @@
 package com.plazoleta.application.service;
 
+import com.plazoleta.domain.util.MensajesError;
+
 import com.plazoleta.application.dto.OrderResponse;
 import com.plazoleta.application.port.input.CancelOrderUseCase;
 import com.plazoleta.application.port.output.OrderRepositoryPort;
@@ -22,10 +24,10 @@ public class CancelOrderService implements CancelOrderUseCase {
     @Override
     public OrderResponse execute(Long orderId, Long clientId) {
         Order order = orderRepositoryPort.findById(orderId)
-                .orElseThrow(() -> new OrderNotFoundException("El pedido no existe"));
+                .orElseThrow(() -> new OrderNotFoundException(MensajesError.PEDIDO_NO_EXISTE));
         // Un cliente solo puede cancelar sus propios pedidos.
         if (!order.getClientId().equals(clientId)) {
-            throw new ForbiddenOperationException("El pedido pertenece a otro cliente");
+            throw new ForbiddenOperationException(MensajesError.PEDIDO_PERTENECE_A_OTRO_CLIENTE);
         }
         OrderStatus previousStatus = order.getStatus();
         order.cancel();

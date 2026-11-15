@@ -1,5 +1,7 @@
 package com.plazoleta.application.service;
 
+import com.plazoleta.domain.util.MensajesError;
+
 import com.plazoleta.application.dto.CreateRestaurantCommand;
 import com.plazoleta.application.dto.RestaurantResponse;
 import com.plazoleta.application.port.input.CreateRestaurantUseCase;
@@ -22,17 +24,17 @@ public class CreateRestaurantService implements CreateRestaurantUseCase {
     @Override
     public RestaurantResponse execute(CreateRestaurantCommand command) {
         if (command == null) {
-            throw new IllegalArgumentException("El cuerpo de la petición es obligatorio");
+            throw new IllegalArgumentException(MensajesError.CUERPO_DE_LA_PETICION_ES_OBLIGATORIO);
         }
         if (command.getOwnerUserId() == null) {
-            throw new IllegalArgumentException("El propietario del restaurante es obligatorio");
+            throw new IllegalArgumentException(MensajesError.PROPIETARIO_DEL_RESTAURANTE_ES_OBLIGATORIO);
         }
 
         User owner = userRepositoryPort.findById(command.getOwnerUserId())
-                .orElseThrow(() -> new UserNotFoundException("El usuario propietario no existe"));
+                .orElseThrow(() -> new UserNotFoundException(MensajesError.USUARIO_PROPIETARIO_NO_EXISTE));
 
         if (owner.getRole() != Role.PROPIETARIO) {
-            throw new IllegalArgumentException("El usuario debe tener el rol PROPIETARIO");
+            throw new IllegalArgumentException(MensajesError.USUARIO_DEBE_TENER_EL_ROL_PROPIETARIO);
         }
 
         Restaurant restaurant = new Restaurant(null, command.getName(), command.getNit(), command.getAddress(),

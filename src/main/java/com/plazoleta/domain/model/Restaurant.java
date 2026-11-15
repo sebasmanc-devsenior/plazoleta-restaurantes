@@ -1,5 +1,7 @@
 package com.plazoleta.domain.model;
 
+import com.plazoleta.domain.util.MensajesError;
+
 import java.util.Objects;
 
 public class Restaurant {
@@ -27,25 +29,25 @@ public class Restaurant {
 
     public void validate() {
         if (name == null || name.isBlank()) {
-            throw new IllegalArgumentException("El nombre del restaurante es obligatorio");
+            throw new IllegalArgumentException(MensajesError.NOMBRE_DEL_RESTAURANTE_ES_OBLIGATORIO);
         }
         if (name.trim().matches("\\d+")) {
-            throw new IllegalArgumentException("El nombre del restaurante no puede tener solo números");
+            throw new IllegalArgumentException(MensajesError.NOMBRE_DEL_RESTAURANTE_NO_PUEDE_TENER_SOLO);
         }
         if (nit == null || !nit.matches("\\d+")) {
-            throw new IllegalArgumentException("El NIT solo puede tener dígitos");
+            throw new IllegalArgumentException(MensajesError.NIT_SOLO_PUEDE_TENER_DIGITOS);
         }
         if (address == null || address.isBlank()) {
-            throw new IllegalArgumentException("La dirección es obligatoria");
+            throw new IllegalArgumentException(MensajesError.DIRECCION_ES_OBLIGATORIA);
         }
         if (phone == null || !phone.matches("(?:\\+\\d{7,12}|\\d{7,13})")) {
-            throw new IllegalArgumentException("El teléfono del restaurante debe tener máximo 13 caracteres, solo dígitos y opcionalmente un + al inicio");
+            throw new IllegalArgumentException(MensajesError.TELEFONO_DEL_RESTAURANTE_DEBE_TENER_MAXIMO_13);
         }
         if (logoUrl == null || logoUrl.isBlank()) {
-            throw new IllegalArgumentException("La URL del logo es obligatoria");
+            throw new IllegalArgumentException(MensajesError.URL_DEL_LOGO_ES_OBLIGATORIA);
         }
         if (ownerUserId == null) {
-            throw new IllegalArgumentException("El propietario del restaurante es obligatorio");
+            throw new IllegalArgumentException(MensajesError.PROPIETARIO_DEL_RESTAURANTE_ES_OBLIGATORIO);
         }
     }
 
