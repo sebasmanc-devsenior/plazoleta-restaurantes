@@ -75,6 +75,8 @@ public final class MensajesError {
     public static final String USUARIO_DEBE_TENER_EL_ROL_PROPIETARIO = "El usuario debe tener el rol PROPIETARIO";
     public static final String USUARIO_PROPIETARIO_NO_EXISTE = "El usuario propietario no existe";
     public static final String YA_TIENES_UN_PEDIDO_EN_PROCESO_PENDIENTE = "Ya tienes un pedido en proceso (pendiente, en preparación o listo)";
+    public static final String RUTA_NO_EXISTE = "La ruta solicitada no existe";
+    public static final String PETICION_NO_SOPORTADA = "La petición no se puede procesar con ese método o formato";
 
     private MensajesError() {
     }

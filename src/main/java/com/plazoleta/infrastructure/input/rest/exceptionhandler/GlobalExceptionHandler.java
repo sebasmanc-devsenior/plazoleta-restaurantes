@@ -75,9 +75,19 @@ public class GlobalExceptionHandler {
         return buildResponse(HttpStatus.SERVICE_UNAVAILABLE, ex.getMessage(), request.getRequestURI());
     }
 
-    @ExceptionHandler(IllegalStateException.class)
-    public ResponseEntity<ErrorResponse> handleUnexpectedState(IllegalStateException ex, HttpServletRequest request) {
-        log.error("Unexpected state at {}", request.getRequestURI(), ex);
+    /** Error no previsto: 500 con el formato del proyecto y sin detalles internos (el detalle queda en el log). */
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ErrorResponse> handleUnexpected(Exception ex, HttpServletRequest request) throws Exception {
+        if (ex instanceof org.springframework.security.access.AccessDeniedException
+                || ex instanceof org.springframework.security.core.AuthenticationException) {
+            throw ex; // los resuelve Spring Security: 403 o 401
+        }
+        if (ex instanceof org.springframework.web.ErrorResponse frameworkError) {
+            HttpStatus status = HttpStatus.valueOf(frameworkError.getStatusCode().value());
+            return buildResponse(status, status == HttpStatus.NOT_FOUND ? MensajesError.RUTA_NO_EXISTE
+                    : MensajesError.PETICION_NO_SOPORTADA, request.getRequestURI());
+        }
+        log.error("Unexpected error at {}", request.getRequestURI(), ex);
         return buildResponse(HttpStatus.INTERNAL_SERVER_ERROR, MensajesError.ERROR_INTERNO_DEL_SERVIDOR, request.getRequestURI());
     }
 
