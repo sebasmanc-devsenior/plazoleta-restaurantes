@@ -1,13 +1,19 @@
 package com.plazoleta.infrastructure.input.rest.exceptionhandler;
 
 import java.time.Instant;
+import java.util.Map;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+
+/** Formato de error del servicio. "details" solo aparece cuando hay errores por campo (validaciones Jakarta). */
 public class ErrorResponse {
     private Instant timestamp;
     private int status;
     private String error;
     private String message;
     private String path;
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
+    private Map<String, String> details;
 
     public ErrorResponse() {
     }
@@ -30,4 +36,6 @@ public class ErrorResponse {
     public void setMessage(String message) { this.message = message; }
     public String getPath() { return path; }
     public void setPath(String path) { this.path = path; }
+    public Map<String, String> getDetails() { return details; }
+    public void setDetails(Map<String, String> details) { this.details = details; }
 }

@@ -1,6 +1,7 @@
 package com.plazoleta.infrastructure.input.rest;
 
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -14,59 +15,53 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.plazoleta.application.dto.CreateDishCommand;
 import com.plazoleta.application.dto.DishResponse;
 import com.plazoleta.application.dto.PageResult;
-import com.plazoleta.application.dto.UpdateDishCommand;
-import com.plazoleta.application.port.input.CreateDishUseCase;
-import com.plazoleta.application.port.input.ListRestaurantDishesUseCase;
-import com.plazoleta.application.port.input.SetDishAvailabilityUseCase;
-import com.plazoleta.application.port.input.UpdateDishUseCase;
+import com.plazoleta.application.handler.IDishHandler;
 import com.plazoleta.infrastructure.configuration.security.AuthenticatedUserContext;
+import com.plazoleta.infrastructure.input.rest.dto.CreateDishRequest;
+import com.plazoleta.infrastructure.input.rest.dto.DishAvailabilityRequest;
+import com.plazoleta.infrastructure.input.rest.dto.UpdateDishRequest;
+import com.plazoleta.infrastructure.input.rest.mapper.DishRequestMapper;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
+/** Solo HTTP: valida el request con Jakarta, toma el id del propietario del token y llama al handler. */
 @RestController
 @RequestMapping("/api")
 @Tag(name = "Dishes")
 public class DishController {
-    private final CreateDishUseCase createDishUseCase;
-    private final UpdateDishUseCase updateDishUseCase;
-    private final SetDishAvailabilityUseCase setDishAvailabilityUseCase;
-    private final ListRestaurantDishesUseCase listRestaurantDishesUseCase;
+    private final IDishHandler dishHandler;
 
-    public DishController(CreateDishUseCase createDishUseCase, UpdateDishUseCase updateDishUseCase,
-                          SetDishAvailabilityUseCase setDishAvailabilityUseCase,
-                          ListRestaurantDishesUseCase listRestaurantDishesUseCase) {
-        this.createDishUseCase = createDishUseCase;
-        this.updateDishUseCase = updateDishUseCase;
-        this.setDishAvailabilityUseCase = setDishAvailabilityUseCase;
-        this.listRestaurantDishesUseCase = listRestaurantDishesUseCase;
+    public DishController(IDishHandler dishHandler) {
+        this.dishHandler = dishHandler;
     }
 
     @PostMapping("/dishes")
     @Operation(summary = "HU-3 Create dish", description = "Restaurant OWNER only. New dishes are active.")
-    public ResponseEntity<DishResponse> createDish(@RequestBody CreateDishCommand command, HttpServletRequest request) {
+    public ResponseEntity<DishResponse> createDish(@Valid @RequestBody CreateDishRequest body,
+                                                   HttpServletRequest request) {
         Long ownerId = AuthenticatedUserContext.resolveUserId(request);
-        return ResponseEntity.status(HttpStatus.CREATED).body(createDishUseCase.execute(command, ownerId));
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(dishHandler.createDish(DishRequestMapper.toCommand(body), ownerId));
     }
 
     @PutMapping("/dishes/{dishId}")
     @Operation(summary = "HU-4 Update dish", description = "Restaurant OWNER only. Only price and description can change.")
-    public ResponseEntity<DishResponse> updateDish(@PathVariable Long dishId, @RequestBody UpdateDishCommand command,
+    public ResponseEntity<DishResponse> updateDish(@PathVariable Long dishId, @Valid @RequestBody UpdateDishRequest body,
                                                    HttpServletRequest request) {
         Long ownerId = AuthenticatedUserContext.resolveUserId(request);
-        return ResponseEntity.ok(updateDishUseCase.execute(dishId, command, ownerId));
+        return ResponseEntity.ok(dishHandler.updateDish(dishId, DishRequestMapper.toCommand(body), ownerId));
     }
 
     @PatchMapping("/dishes/{dishId}/availability")
     @Operation(summary = "HU-7 Enable or disable dish", description = "Only the OWNER of the dish's restaurant.")
     public ResponseEntity<DishResponse> setAvailability(@PathVariable Long dishId,
-                                                        @RequestBody AvailabilityRequest command,
+                                                        @Valid @RequestBody DishAvailabilityRequest body,
                                                         HttpServletRequest request) {
         Long ownerId = AuthenticatedUserContext.resolveUserId(request);
-        return ResponseEntity.ok(setDishAvailabilityUseCase.execute(dishId, command.isActive(), ownerId));
+        return ResponseEntity.ok(dishHandler.setDishAvailability(dishId, body.active(), ownerId));
     }
 
     @GetMapping("/restaurants/{restaurantId}/dishes")
@@ -78,13 +73,6 @@ public class DishController {
             @RequestParam(required = false) String category,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
-        return ResponseEntity.ok(listRestaurantDishesUseCase.execute(restaurantId, category, page, size));
-    }
-
-    public static class AvailabilityRequest {
-        private boolean active;
-
-        public boolean isActive() { return active; }
-        public void setActive(boolean active) { this.active = active; }
+        return ResponseEntity.ok(dishHandler.listRestaurantDishes(restaurantId, category, page, size));
     }
 }

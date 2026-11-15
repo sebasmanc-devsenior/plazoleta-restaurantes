@@ -35,7 +35,8 @@ src/main/java/com/plazoleta/
 ├── domain/                     ← núcleo, sin dependencias de frameworks
 │   ├── model/                  Restaurant, Dish, User, Role (reglas de validación)
 │   └── exception/
-├── application/                ← casos de uso y puertos, sin Spring
+├── application/                ← handlers, casos de uso y puertos, sin Spring
+│   ├── handler/                IRestaurantHandler, IDishHandler, IOrderHandler (+ implementación)
 │   ├── port/
 │   │   ├── input/              un caso de uso por historia (CreateRestaurantUseCase…)
 │   │   └── output/             RestaurantRepositoryPort, DishRepositoryPort, UserRepositoryPort
@@ -43,7 +44,7 @@ src/main/java/com/plazoleta/
 │   └── dto/                    datos que entran y salen de los casos de uso
 └── infrastructure/             ← adaptadores y frameworks
     ├── input/
-    │   └── rest/               controladores REST y exceptionhandler/
+    │   └── rest/               controladores REST, dto/ (requests con Jakarta), mapper/ y exceptionhandler/
     ├── output/
     │   ├── persistence/
     │   │   ├── entity/         RestaurantEntity, DishEntity (tablas)
@@ -52,6 +53,10 @@ src/main/java/com/plazoleta/
     │   └── http/               consulta de usuarios al microservicio de usuarios
     └── configuration/          BeanConfiguration (inyección), seguridad, OpenAPI; security/ = filtros JWT
 ```
+
+Flujo de cada petición: `Controller` (solo HTTP: request DTO validado con Jakarta, mapper a comando) →
+`IXHandler` (aplicación: coordina y delega, sin reglas de negocio) → interfaz del caso de uso (`port/input`) →
+`Service` (toda la lógica) → puertos de salida → adaptadores.
 
 ## Cómo ejecutar
 

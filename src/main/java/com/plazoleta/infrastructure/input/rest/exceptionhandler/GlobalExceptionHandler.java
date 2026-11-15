@@ -2,7 +2,15 @@ package com.plazoleta.infrastructure.input.rest.exceptionhandler;
 
 import com.plazoleta.domain.util.MensajesError;
 
+import java.lang.reflect.Field;
+import java.lang.reflect.RecordComponent;
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -11,6 +19,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.validation.FieldError;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -35,6 +45,26 @@ public class GlobalExceptionHandler {
     @ExceptionHandler({InvalidPriceException.class, IllegalArgumentException.class, InvalidSecurityPinException.class})
     public ResponseEntity<ErrorResponse> handleBadRequest(Exception ex, HttpServletRequest request) {
         return buildResponse(HttpStatus.BAD_REQUEST, ex.getMessage(), request.getRequestURI());
+    }
+
+    /**
+     * Validaciones Jakarta de los request DTO: 400 con el mensaje del primer campo inválido (en el orden en que
+     * el request declara sus campos, el mismo orden en que valida el dominio) y en "details" todos los campos.
+     */
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidRequest(MethodArgumentNotValidException ex,
+                                                              HttpServletRequest request) {
+        List<String> order = declaredFields(ex.getParameter().getParameterType());
+        List<FieldError> errors = new ArrayList<>(ex.getBindingResult().getFieldErrors());
+        errors.sort(Comparator.comparingInt((FieldError error) -> position(order, error.getField()))
+                .thenComparing(FieldError::getField));
+        Map<String, String> details = new LinkedHashMap<>();
+        errors.forEach(error -> details.putIfAbsent(error.getField(), error.getDefaultMessage()));
+        String message = errors.isEmpty() ? MensajesError.PETICION_TIENE_DATOS_INVALIDOS
+                : errors.get(0).getDefaultMessage();
+        ResponseEntity<ErrorResponse> response = buildResponse(HttpStatus.BAD_REQUEST, message, request.getRequestURI());
+        response.getBody().setDetails(details);
+        return response;
     }
 
     @ExceptionHandler({
@@ -89,6 +119,19 @@ public class GlobalExceptionHandler {
         }
         log.error("Unexpected error at {}", request.getRequestURI(), ex);
         return buildResponse(HttpStatus.INTERNAL_SERVER_ERROR, MensajesError.ERROR_INTERNO_DEL_SERVIDOR, request.getRequestURI());
+    }
+
+    private static List<String> declaredFields(Class<?> type) {
+        if (type.isRecord()) {
+            return Arrays.stream(type.getRecordComponents()).map(RecordComponent::getName).toList();
+        }
+        return Arrays.stream(type.getDeclaredFields()).map(Field::getName).toList();
+    }
+
+    /** Posición del campo en el request; "dishes[0].quantity" cuenta como "dishes". */
+    private static int position(List<String> order, String field) {
+        int index = order.indexOf(field.split("[.\\[]", 2)[0]);
+        return index < 0 ? Integer.MAX_VALUE : index;
     }
 
     private ResponseEntity<ErrorResponse> buildResponse(HttpStatus status, String message, String path) {
