@@ -28,6 +28,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.plazoleta.application.dto.CreateOrderCommand;
 import com.plazoleta.application.dto.OrderItemCommand;
+import com.plazoleta.application.dto.OrderItemResponse;
 import com.plazoleta.application.dto.OrderResponse;
 import com.plazoleta.application.port.output.DishRepositoryPort;
 import com.plazoleta.application.port.output.OrderRepositoryPort;
@@ -112,7 +113,7 @@ class CreateOrderUseCaseTest {
         assertThat(saved.getValue().getCreatedAt()).isEqualTo(LocalDateTime.of(2026, 11, 10, 12, 0));
         assertThat(response.getId()).isEqualTo(50L);
         assertThat(response.getStatus()).isEqualTo("PENDIENTE");
-        assertThat(response.getDishes()).extracting(OrderItemCommand::getQuantity).containsExactly(2, 1);
+        assertThat(response.getDishes()).extracting(OrderItemResponse::getQuantity).containsExactly(2, 1);
     }
 
     @Test
