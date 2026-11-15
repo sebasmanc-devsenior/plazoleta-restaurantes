@@ -1,4 +1,4 @@
-package com.plazoleta.application.service;
+package com.plazoleta.application.usecase;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -31,7 +31,7 @@ import com.plazoleta.domain.model.User;
 
 /** HU-4: Modificar plato (solo precio y descripción). */
 @ExtendWith(MockitoExtension.class)
-class UpdateDishServiceTest {
+class UpdateDishUseCaseTest {
     private static final long OWNER_ID = 1L;
     private static final long RESTAURANT_ID = 10L;
     private static final long DISH_ID = 100L;
@@ -43,7 +43,7 @@ class UpdateDishServiceTest {
     @Mock
     private UserRepositoryPort userRepositoryPort;
     @InjectMocks
-    private UpdateDishService service;
+    private UpdateDishUseCase service;
 
     private Dish dish;
 

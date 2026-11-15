@@ -1,4 +1,4 @@
-package com.plazoleta.application.service;
+package com.plazoleta.application.usecase;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -33,7 +33,7 @@ import com.plazoleta.domain.model.OrderStatus;
 
 /** HU-16: Cancelar pedido. */
 @ExtendWith(MockitoExtension.class)
-class CancelOrderServiceTest {
+class CancelOrderUseCaseTest {
     private static final Long ORDER_ID = 50L;
     private static final Long CLIENT_ID = 7L;
 
@@ -42,7 +42,7 @@ class CancelOrderServiceTest {
     @Mock
     private OrderTraceabilityPort orderTraceabilityPort;
     @InjectMocks
-    private CancelOrderService service;
+    private CancelOrderUseCase service;
 
     private static Order order(OrderStatus status) {
         return new Order(ORDER_ID, CLIENT_ID, 1L, status, LocalDateTime.of(2026, 11, 10, 12, 0),

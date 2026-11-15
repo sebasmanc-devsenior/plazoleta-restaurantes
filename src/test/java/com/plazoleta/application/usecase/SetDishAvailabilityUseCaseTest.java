@@ -1,4 +1,4 @@
-package com.plazoleta.application.service;
+package com.plazoleta.application.usecase;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -28,7 +28,7 @@ import com.plazoleta.domain.model.User;
 
 /** HU-7: Habilitar / deshabilitar plato. */
 @ExtendWith(MockitoExtension.class)
-class SetDishAvailabilityServiceTest {
+class SetDishAvailabilityUseCaseTest {
     private static final long OWNER_ID = 1L;
     private static final long RESTAURANT_ID = 10L;
     private static final long DISH_ID = 100L;
@@ -40,7 +40,7 @@ class SetDishAvailabilityServiceTest {
     @Mock
     private UserRepositoryPort userRepositoryPort;
     @InjectMocks
-    private SetDishAvailabilityService service;
+    private SetDishAvailabilityUseCase service;
 
     private Dish givenDish(boolean active, long restaurantOwnerId) {
         Dish dish = new Dish(DISH_ID, "Bandeja paisa", 25000, "Plato típico", "https://img.png", "Almuerzos",

@@ -1,4 +1,4 @@
-package com.plazoleta.application.service;
+package com.plazoleta.application.usecase;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -32,13 +32,13 @@ import com.plazoleta.domain.model.Restaurant;
 
 /** HU-10: Listar los platos de un restaurante (paginado y filtrable por categoría). */
 @ExtendWith(MockitoExtension.class)
-class ListRestaurantDishesServiceTest {
+class ListRestaurantDishesUseCaseTest {
     @Mock
     private DishRepositoryPort dishRepositoryPort;
     @Mock
     private RestaurantRepositoryPort restaurantRepositoryPort;
     @InjectMocks
-    private ListRestaurantDishesService service;
+    private ListRestaurantDishesUseCase service;
 
     private static Dish dish(long id, String name, String category) {
         return dish(id, name, category, true);

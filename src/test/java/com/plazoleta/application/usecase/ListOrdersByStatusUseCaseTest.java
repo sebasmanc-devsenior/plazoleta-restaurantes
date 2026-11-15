@@ -1,4 +1,4 @@
-package com.plazoleta.application.service;
+package com.plazoleta.application.usecase;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -31,11 +31,11 @@ import com.plazoleta.domain.model.OrderStatus;
 
 /** HU-12: Obtener la lista de pedidos filtrando por estado. */
 @ExtendWith(MockitoExtension.class)
-class ListOrdersByStatusServiceTest {
+class ListOrdersByStatusUseCaseTest {
     @Mock
     private OrderRepositoryPort orderRepositoryPort;
     @InjectMocks
-    private ListOrdersByStatusService service;
+    private ListOrdersByStatusUseCase service;
 
     private static Order order(long id) {
         return new Order(id, 7L, 1L, OrderStatus.PENDIENTE, LocalDateTime.of(2026, 11, 10, 12, 0),

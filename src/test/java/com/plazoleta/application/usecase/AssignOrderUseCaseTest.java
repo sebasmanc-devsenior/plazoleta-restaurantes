@@ -1,4 +1,4 @@
-package com.plazoleta.application.service;
+package com.plazoleta.application.usecase;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -34,7 +34,7 @@ import com.plazoleta.domain.model.OrderStatus;
 
 /** HU-13: Asignarse a un pedido y cambiar su estado a "en preparación". */
 @ExtendWith(MockitoExtension.class)
-class AssignOrderServiceTest {
+class AssignOrderUseCaseTest {
     private static final Long ORDER_ID = 50L;
     private static final Long EMPLOYEE_ID = 9L;
     private static final Long RESTAURANT_ID = 1L;
@@ -44,7 +44,7 @@ class AssignOrderServiceTest {
     @Mock
     private OrderTraceabilityPort orderTraceabilityPort;
     @InjectMocks
-    private AssignOrderService service;
+    private AssignOrderUseCase service;
 
     private static Order order(OrderStatus status, Long employeeId) {
         return new Order(ORDER_ID, 7L, RESTAURANT_ID, status, LocalDateTime.of(2026, 11, 10, 12, 0),

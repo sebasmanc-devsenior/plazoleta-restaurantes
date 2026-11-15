@@ -1,4 +1,4 @@
-package com.plazoleta.application.service;
+package com.plazoleta.application.usecase;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -18,11 +18,11 @@ import com.plazoleta.domain.model.Restaurant;
 
 /** Consulta interna usada por users-service para validar la HU-6. */
 @ExtendWith(MockitoExtension.class)
-class GetRestaurantServiceTest {
+class GetRestaurantUseCaseTest {
     @Mock
     private RestaurantRepositoryPort restaurantRepositoryPort;
     @InjectMocks
-    private GetRestaurantService service;
+    private GetRestaurantUseCase service;
 
     @Test
     void returnsRestaurantWithItsOwner() {

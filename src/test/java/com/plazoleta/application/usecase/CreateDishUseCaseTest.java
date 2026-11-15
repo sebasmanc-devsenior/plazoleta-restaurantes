@@ -1,4 +1,4 @@
-package com.plazoleta.application.service;
+package com.plazoleta.application.usecase;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -33,7 +33,7 @@ import com.plazoleta.domain.model.User;
 
 /** HU-3: Crear plato. */
 @ExtendWith(MockitoExtension.class)
-class CreateDishServiceTest {
+class CreateDishUseCaseTest {
     private static final long OWNER_ID = 1L;
     private static final long RESTAURANT_ID = 10L;
 
@@ -44,7 +44,7 @@ class CreateDishServiceTest {
     @Mock
     private UserRepositoryPort userRepositoryPort;
     @InjectMocks
-    private CreateDishService service;
+    private CreateDishUseCase service;
 
     private static CreateDishCommand command(Integer price) {
         return new CreateDishCommand("Bandeja paisa", price, "Plato típico", "https://img.png", "Almuerzos", RESTAURANT_ID);

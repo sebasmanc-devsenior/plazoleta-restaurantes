@@ -1,4 +1,4 @@
-package com.plazoleta.application.service;
+package com.plazoleta.application.usecase;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -48,7 +48,7 @@ import com.plazoleta.domain.model.User;
 
 /** HU-11: Realizar pedido. */
 @ExtendWith(MockitoExtension.class)
-class CreateOrderServiceTest {
+class CreateOrderUseCaseTest {
     private static final Long CLIENT_ID = 7L;
     private static final Clock CLOCK = Clock.fixed(Instant.parse("2026-11-10T17:00:00Z"), ZoneId.of("America/Bogota"));
 
@@ -63,11 +63,11 @@ class CreateOrderServiceTest {
     @Mock
     private OrderTraceabilityPort orderTraceabilityPort;
 
-    private CreateOrderService service;
+    private CreateOrderUseCase service;
 
     @BeforeEach
     void setUp() {
-        service = new CreateOrderService(orderRepositoryPort, dishRepositoryPort, restaurantRepositoryPort,
+        service = new CreateOrderUseCase(orderRepositoryPort, dishRepositoryPort, restaurantRepositoryPort,
                 userRepositoryPort, orderTraceabilityPort, CLOCK);
     }
 

@@ -20,43 +20,43 @@ import com.plazoleta.application.dto.PageResult;
 import com.plazoleta.application.dto.RestaurantListItem;
 import com.plazoleta.application.dto.RestaurantResponse;
 import com.plazoleta.application.dto.UpdateDishCommand;
-import com.plazoleta.application.port.input.AssignOrderUseCase;
-import com.plazoleta.application.port.input.CancelOrderUseCase;
-import com.plazoleta.application.port.input.CreateDishUseCase;
-import com.plazoleta.application.port.input.CreateOrderUseCase;
-import com.plazoleta.application.port.input.CreateRestaurantUseCase;
-import com.plazoleta.application.port.input.DeliverOrderUseCase;
-import com.plazoleta.application.port.input.GetRestaurantUseCase;
-import com.plazoleta.application.port.input.ListOrdersByStatusUseCase;
-import com.plazoleta.application.port.input.ListRestaurantDishesUseCase;
-import com.plazoleta.application.port.input.ListRestaurantsUseCase;
-import com.plazoleta.application.port.input.MarkOrderReadyUseCase;
-import com.plazoleta.application.port.input.SetDishAvailabilityUseCase;
-import com.plazoleta.application.port.input.UpdateDishUseCase;
+import com.plazoleta.application.port.input.AssignOrderPort;
+import com.plazoleta.application.port.input.CancelOrderPort;
+import com.plazoleta.application.port.input.CreateDishPort;
+import com.plazoleta.application.port.input.CreateOrderPort;
+import com.plazoleta.application.port.input.CreateRestaurantPort;
+import com.plazoleta.application.port.input.DeliverOrderPort;
+import com.plazoleta.application.port.input.GetRestaurantPort;
+import com.plazoleta.application.port.input.ListOrdersByStatusPort;
+import com.plazoleta.application.port.input.ListRestaurantDishesPort;
+import com.plazoleta.application.port.input.ListRestaurantsPort;
+import com.plazoleta.application.port.input.MarkOrderReadyPort;
+import com.plazoleta.application.port.input.SetDishAvailabilityPort;
+import com.plazoleta.application.port.input.UpdateDishPort;
 
 /**
  * Los handlers no deciden nada: cada método pasa sus datos, sin cambiarlos, al caso de uso que le corresponde y
  * devuelve la misma respuesta.
  */
 class HandlersTest {
-    private final CreateRestaurantUseCase createRestaurant = mock(CreateRestaurantUseCase.class);
-    private final ListRestaurantsUseCase listRestaurants = mock(ListRestaurantsUseCase.class);
-    private final GetRestaurantUseCase getRestaurant = mock(GetRestaurantUseCase.class);
+    private final CreateRestaurantPort createRestaurant = mock(CreateRestaurantPort.class);
+    private final ListRestaurantsPort listRestaurants = mock(ListRestaurantsPort.class);
+    private final GetRestaurantPort getRestaurant = mock(GetRestaurantPort.class);
     private final RestaurantHandler restaurantHandler =
             new RestaurantHandler(createRestaurant, listRestaurants, getRestaurant);
 
-    private final CreateDishUseCase createDish = mock(CreateDishUseCase.class);
-    private final UpdateDishUseCase updateDish = mock(UpdateDishUseCase.class);
-    private final SetDishAvailabilityUseCase setAvailability = mock(SetDishAvailabilityUseCase.class);
-    private final ListRestaurantDishesUseCase listDishes = mock(ListRestaurantDishesUseCase.class);
+    private final CreateDishPort createDish = mock(CreateDishPort.class);
+    private final UpdateDishPort updateDish = mock(UpdateDishPort.class);
+    private final SetDishAvailabilityPort setAvailability = mock(SetDishAvailabilityPort.class);
+    private final ListRestaurantDishesPort listDishes = mock(ListRestaurantDishesPort.class);
     private final DishHandler dishHandler = new DishHandler(createDish, updateDish, setAvailability, listDishes);
 
-    private final CreateOrderUseCase createOrder = mock(CreateOrderUseCase.class);
-    private final ListOrdersByStatusUseCase listOrders = mock(ListOrdersByStatusUseCase.class);
-    private final AssignOrderUseCase assignOrder = mock(AssignOrderUseCase.class);
-    private final MarkOrderReadyUseCase markReady = mock(MarkOrderReadyUseCase.class);
-    private final DeliverOrderUseCase deliverOrder = mock(DeliverOrderUseCase.class);
-    private final CancelOrderUseCase cancelOrder = mock(CancelOrderUseCase.class);
+    private final CreateOrderPort createOrder = mock(CreateOrderPort.class);
+    private final ListOrdersByStatusPort listOrders = mock(ListOrdersByStatusPort.class);
+    private final AssignOrderPort assignOrder = mock(AssignOrderPort.class);
+    private final MarkOrderReadyPort markReady = mock(MarkOrderReadyPort.class);
+    private final DeliverOrderPort deliverOrder = mock(DeliverOrderPort.class);
+    private final CancelOrderPort cancelOrder = mock(CancelOrderPort.class);
     private final OrderHandler orderHandler =
             new OrderHandler(createOrder, listOrders, assignOrder, markReady, deliverOrder, cancelOrder);
 

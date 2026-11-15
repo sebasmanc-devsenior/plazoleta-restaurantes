@@ -1,4 +1,4 @@
-package com.plazoleta.application.service;
+package com.plazoleta.application.usecase;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -29,7 +29,7 @@ import com.plazoleta.domain.model.User;
 
 /** HU-2: Crear restaurante. */
 @ExtendWith(MockitoExtension.class)
-class CreateRestaurantServiceTest {
+class CreateRestaurantUseCaseTest {
     private static final long OWNER_ID = 5L;
 
     @Mock
@@ -37,7 +37,7 @@ class CreateRestaurantServiceTest {
     @Mock
     private UserRepositoryPort userRepositoryPort;
     @InjectMocks
-    private CreateRestaurantService service;
+    private CreateRestaurantUseCase service;
 
     private static CreateRestaurantCommand command(String name, String nit, String phone) {
         return new CreateRestaurantCommand(name, nit, "Calle 10 # 20-30", phone, "https://logo.png", OWNER_ID);

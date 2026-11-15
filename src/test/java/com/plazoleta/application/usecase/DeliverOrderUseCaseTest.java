@@ -1,4 +1,4 @@
-package com.plazoleta.application.service;
+package com.plazoleta.application.usecase;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -37,7 +37,7 @@ import com.plazoleta.domain.model.OrderStatus;
 
 /** HU-15: Entregar pedido (marcarlo como entregado). */
 @ExtendWith(MockitoExtension.class)
-class DeliverOrderServiceTest {
+class DeliverOrderUseCaseTest {
     private static final Long ORDER_ID = 50L;
     private static final Long EMPLOYEE_ID = 9L;
     private static final Long RESTAURANT_ID = 1L;
@@ -48,7 +48,7 @@ class DeliverOrderServiceTest {
     @Mock
     private OrderTraceabilityPort orderTraceabilityPort;
     @InjectMocks
-    private DeliverOrderService service;
+    private DeliverOrderUseCase service;
 
     private static Order order(OrderStatus status) {
         return new Order(ORDER_ID, 7L, RESTAURANT_ID, status, LocalDateTime.of(2026, 11, 10, 12, 0),
