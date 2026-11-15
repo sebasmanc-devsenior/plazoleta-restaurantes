@@ -10,6 +10,7 @@ import com.plazoleta.application.dto.PageResult;
 import com.plazoleta.application.port.output.DishRepositoryPort;
 import com.plazoleta.domain.model.Dish;
 import com.plazoleta.infrastructure.output.persistence.entity.DishEntity;
+import com.plazoleta.infrastructure.output.persistence.mapper.DishEntityMapper;
 import com.plazoleta.infrastructure.output.persistence.repository.DishJpaRepository;
 
 @Repository
@@ -22,13 +23,13 @@ public class DishPersistenceAdapter implements DishRepositoryPort {
 
     @Override
     public Dish save(Dish dish) {
-        DishEntity entity = DishEntity.fromDomain(dish);
-        return dishJpaRepository.save(entity).toDomain();
+        DishEntity entity = DishEntityMapper.toEntity(dish);
+        return DishEntityMapper.toDomain(dishJpaRepository.save(entity));
     }
 
     @Override
     public Optional<Dish> findById(Long id) {
-        return dishJpaRepository.findById(id).map(DishEntity::toDomain);
+        return dishJpaRepository.findById(id).map(DishEntityMapper::toDomain);
     }
 
     /** HU-10: todos los platos del restaurante, ordenados por nombre, con filtro opcional por categoría. */
@@ -38,7 +39,7 @@ public class DishPersistenceAdapter implements DishRepositoryPort {
         var result = category == null
                 ? dishJpaRepository.findByRestaurant_Id(restaurantId, pageable)
                 : dishJpaRepository.findByRestaurant_IdAndCategoryIgnoreCase(restaurantId, category, pageable);
-        return new PageResult<>(result.getContent().stream().map(DishEntity::toDomain).toList(),
+        return new PageResult<>(result.getContent().stream().map(DishEntityMapper::toDomain).toList(),
                 result.getNumber(), result.getSize(), result.getTotalElements());
     }
 }

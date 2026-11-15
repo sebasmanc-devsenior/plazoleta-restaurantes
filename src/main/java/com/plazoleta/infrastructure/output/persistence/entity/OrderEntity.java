@@ -4,7 +4,6 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.plazoleta.domain.model.Order;
 import com.plazoleta.domain.model.OrderStatus;
 
 import jakarta.persistence.CascadeType;
@@ -69,33 +68,23 @@ public class OrderEntity {
     public OrderEntity() {
     }
 
-    public static OrderEntity fromDomain(Order order) {
-        OrderEntity entity = new OrderEntity();
-        entity.id = order.getId();
-        entity.clientId = order.getClientId();
-        entity.restaurant = RestaurantEntity.reference(order.getRestaurantId());
-        entity.status = order.getStatus();
-        entity.createdAt = order.getCreatedAt();
-        entity.employeeId = order.getEmployeeId();
-        entity.securityPin = order.getSecurityPin();
-        entity.activeClientId = activeClientIdFor(order);
-        order.getItems().forEach(item -> entity.items.add(
-                new OrderItemEntity(entity, DishEntity.reference(item.getDishId()), item.getQuantity())));
-        return entity;
-    }
-
-    /**
-     * Valor de active_client_id: el id del cliente mientras el pedido está en proceso, null cuando terminó.
-     * La columna es única, así MySQL impide que un cliente tenga dos pedidos en proceso (HU-11).
-     */
-    public static Long activeClientIdFor(Order order) {
-        return OrderStatus.IN_PROCESS.contains(order.getStatus()) ? order.getClientId() : null;
-    }
-
-    public Order toDomain() {
-        return new Order(id, clientId, restaurant.getId(), status, createdAt,
-                items.stream().map(OrderItemEntity::toDomain).toList(), employeeId, securityPin);
-    }
-
     public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+    public Long getClientId() { return clientId; }
+    public void setClientId(Long clientId) { this.clientId = clientId; }
+    public Long getRestaurantId() { return restaurant == null ? null : restaurant.getId(); }
+    public void setRestaurantId(Long restaurantId) {
+        restaurant = restaurantId == null ? null : RestaurantEntity.reference(restaurantId);
+    }
+    public OrderStatus getStatus() { return status; }
+    public void setStatus(OrderStatus status) { this.status = status; }
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+    public Long getEmployeeId() { return employeeId; }
+    public void setEmployeeId(Long employeeId) { this.employeeId = employeeId; }
+    public String getSecurityPin() { return securityPin; }
+    public void setSecurityPin(String securityPin) { this.securityPin = securityPin; }
+    public Long getActiveClientId() { return activeClientId; }
+    public void setActiveClientId(Long activeClientId) { this.activeClientId = activeClientId; }
+    public List<OrderItemEntity> getItems() { return items; }
 }

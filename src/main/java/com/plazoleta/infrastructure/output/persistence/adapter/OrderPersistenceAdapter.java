@@ -16,6 +16,7 @@ import com.plazoleta.domain.exception.ActiveOrderExistsException;
 import com.plazoleta.domain.model.Order;
 import com.plazoleta.domain.model.OrderStatus;
 import com.plazoleta.infrastructure.output.persistence.entity.OrderEntity;
+import com.plazoleta.infrastructure.output.persistence.mapper.OrderEntityMapper;
 import com.plazoleta.infrastructure.output.persistence.repository.OrderJpaRepository;
 
 @Repository
@@ -32,7 +33,7 @@ public class OrderPersistenceAdapter implements OrderRepositoryPort {
             throw new IllegalStateException(MensajesError.SAVE_SOLO_CREA_PEDIDOS_NUEVOS_PARA_CAMBIAR);
         }
         try {
-            return orderJpaRepository.save(OrderEntity.fromDomain(order)).toDomain();
+            return OrderEntityMapper.toDomain(orderJpaRepository.save(OrderEntityMapper.toEntity(order)));
         } catch (DataIntegrityViolationException ex) {
             // Dos pedidos simultáneos del mismo cliente: la columna única active_client_id deja pasar solo uno.
             String cause = String.valueOf(ex.getMostSpecificCause().getMessage()).toLowerCase();
@@ -47,13 +48,13 @@ public class OrderPersistenceAdapter implements OrderRepositoryPort {
     @Override
     public boolean updateIfStatus(Order order, OrderStatus expectedStatus) {
         int updatedRows = orderJpaRepository.updateStatusIfCurrent(order.getId(), expectedStatus, order.getStatus(),
-                order.getEmployeeId(), order.getSecurityPin(), OrderEntity.activeClientIdFor(order));
+                order.getEmployeeId(), order.getSecurityPin(), OrderEntityMapper.activeClientIdFor(order));
         return updatedRows == 1;
     }
 
     @Override
     public Optional<Order> findById(Long id) {
-        return orderJpaRepository.findById(id).map(OrderEntity::toDomain);
+        return orderJpaRepository.findById(id).map(OrderEntityMapper::toDomain);
     }
 
     @Override
@@ -65,7 +66,7 @@ public class OrderPersistenceAdapter implements OrderRepositoryPort {
     public PageResult<Order> findByRestaurantAndStatus(Long restaurantId, OrderStatus status, int page, int size) {
         var pageable = PageRequest.of(page, size, Sort.by("createdAt").and(Sort.by("id")));
         var result = orderJpaRepository.findByRestaurant_IdAndStatus(restaurantId, status, pageable);
-        return new PageResult<>(result.getContent().stream().map(OrderEntity::toDomain).toList(),
+        return new PageResult<>(result.getContent().stream().map(OrderEntityMapper::toDomain).toList(),
                 result.getNumber(), result.getSize(), result.getTotalElements());
     }
 }

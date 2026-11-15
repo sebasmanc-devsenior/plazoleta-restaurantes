@@ -1,6 +1,5 @@
 package com.plazoleta.infrastructure.output.persistence.entity;
 
-import com.plazoleta.domain.model.Dish;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -50,24 +49,8 @@ public class DishEntity {
     public DishEntity() {
     }
 
-    public static DishEntity fromDomain(Dish dish) {
-        DishEntity entity = new DishEntity();
-        entity.setId(dish.getId());
-        entity.setName(dish.getName());
-        entity.setPrice(dish.getPrice());
-        entity.setDescription(dish.getDescription());
-        entity.setImageUrl(dish.getImageUrl());
-        entity.setCategory(dish.getCategory());
-        entity.setRestaurantId(dish.getRestaurantId());
-        entity.setActive(dish.isActive());
-        return entity;
-    }
-
-    public Dish toDomain() {
-        return new Dish(id, name, price, description, imageUrl, category, restaurant.getId(), active);
-    }
-
-    static DishEntity reference(Long id) {
+    /** Referencia a un plato que ya existe, solo con su id (para las relaciones de JPA). */
+    public static DishEntity reference(Long id) {
         DishEntity entity = new DishEntity();
         entity.setId(id);
         return entity;

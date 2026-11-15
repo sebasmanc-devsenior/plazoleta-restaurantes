@@ -1,7 +1,5 @@
 package com.plazoleta.infrastructure.output.persistence.entity;
 
-import com.plazoleta.domain.model.OrderItem;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -35,13 +33,12 @@ public class OrderItemEntity {
     public OrderItemEntity() {
     }
 
-    OrderItemEntity(OrderEntity order, DishEntity dish, int quantity) {
+    public OrderItemEntity(OrderEntity order, DishEntity dish, int quantity) {
         this.order = order;
         this.dish = dish;
         this.quantity = quantity;
     }
 
-    OrderItem toDomain() {
-        return new OrderItem(dish.getId(), quantity);
-    }
+    public Long getDishId() { return dish == null ? null : dish.getId(); }
+    public int getQuantity() { return quantity; }
 }

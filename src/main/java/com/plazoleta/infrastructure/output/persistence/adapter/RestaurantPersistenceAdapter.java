@@ -9,6 +9,7 @@ import com.plazoleta.application.dto.PageResult;
 import com.plazoleta.application.port.output.RestaurantRepositoryPort;
 import com.plazoleta.domain.model.Restaurant;
 import com.plazoleta.infrastructure.output.persistence.entity.RestaurantEntity;
+import com.plazoleta.infrastructure.output.persistence.mapper.RestaurantEntityMapper;
 import com.plazoleta.infrastructure.output.persistence.repository.RestaurantJpaRepository;
 
 @Repository
@@ -21,20 +22,20 @@ public class RestaurantPersistenceAdapter implements RestaurantRepositoryPort {
 
     @Override
     public Restaurant save(Restaurant restaurant) {
-        RestaurantEntity entity = RestaurantEntity.fromDomain(restaurant);
-        return restaurantJpaRepository.save(entity).toDomain();
+        RestaurantEntity entity = RestaurantEntityMapper.toEntity(restaurant);
+        return RestaurantEntityMapper.toDomain(restaurantJpaRepository.save(entity));
     }
 
     @Override
     public Optional<Restaurant> findById(Long id) {
-        return restaurantJpaRepository.findById(id).map(RestaurantEntity::toDomain);
+        return restaurantJpaRepository.findById(id).map(RestaurantEntityMapper::toDomain);
     }
 
     /** HU-9: orden alfabético por nombre, paginado según el tamaño pedido. */
     @Override
     public PageResult<Restaurant> findAll(int page, int size) {
         var result = restaurantJpaRepository.findAllByOrderByNameAsc(PageRequest.of(page, size));
-        return new PageResult<>(result.getContent().stream().map(RestaurantEntity::toDomain).toList(),
+        return new PageResult<>(result.getContent().stream().map(RestaurantEntityMapper::toDomain).toList(),
                 result.getNumber(), result.getSize(), result.getTotalElements());
     }
 }

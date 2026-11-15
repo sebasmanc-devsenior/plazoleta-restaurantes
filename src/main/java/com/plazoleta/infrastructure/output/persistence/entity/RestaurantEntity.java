@@ -1,6 +1,5 @@
 package com.plazoleta.infrastructure.output.persistence.entity;
 
-import com.plazoleta.domain.model.Restaurant;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -41,23 +40,8 @@ public class RestaurantEntity {
     public RestaurantEntity() {
     }
 
-    public static RestaurantEntity fromDomain(Restaurant restaurant) {
-        RestaurantEntity entity = new RestaurantEntity();
-        entity.setId(restaurant.getId());
-        entity.setName(restaurant.getName());
-        entity.setNit(restaurant.getNit());
-        entity.setAddress(restaurant.getAddress());
-        entity.setPhone(restaurant.getPhone());
-        entity.setLogoUrl(restaurant.getLogoUrl());
-        entity.setOwnerUserId(restaurant.getOwnerUserId());
-        return entity;
-    }
-
-    public Restaurant toDomain() {
-        return new Restaurant(id, name, nit, address, phone, logoUrl, ownerUserId);
-    }
-
-    static RestaurantEntity reference(Long id) {
+    /** Referencia a un restaurante que ya existe, solo con su id (para las relaciones de JPA). */
+    public static RestaurantEntity reference(Long id) {
         RestaurantEntity entity = new RestaurantEntity();
         entity.setId(id);
         return entity;
