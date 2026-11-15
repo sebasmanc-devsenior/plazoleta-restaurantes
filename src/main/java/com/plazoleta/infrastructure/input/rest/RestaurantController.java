@@ -1,5 +1,7 @@
 package com.plazoleta.infrastructure.input.rest;
 
+import jakarta.validation.Valid;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -9,33 +11,32 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.plazoleta.application.dto.CreateRestaurantCommand;
 import com.plazoleta.application.dto.PageResult;
 import com.plazoleta.application.dto.RestaurantListItem;
 import com.plazoleta.application.dto.RestaurantResponse;
-import com.plazoleta.application.port.input.CreateRestaurantUseCase;
-import com.plazoleta.application.port.input.ListRestaurantsUseCase;
+import com.plazoleta.application.handler.IRestaurantHandler;
+import com.plazoleta.infrastructure.input.rest.dto.CreateRestaurantRequest;
+import com.plazoleta.infrastructure.input.rest.mapper.RestaurantRequestMapper;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
+/** Solo HTTP: recibe el request, lo valida con Jakarta, lo pasa al handler y arma la respuesta. */
 @RestController
 @RequestMapping("/api")
 @Tag(name = "Restaurants")
 public class RestaurantController {
-    private final CreateRestaurantUseCase createRestaurantUseCase;
-    private final ListRestaurantsUseCase listRestaurantsUseCase;
+    private final IRestaurantHandler restaurantHandler;
 
-    public RestaurantController(CreateRestaurantUseCase createRestaurantUseCase,
-                                ListRestaurantsUseCase listRestaurantsUseCase) {
-        this.createRestaurantUseCase = createRestaurantUseCase;
-        this.listRestaurantsUseCase = listRestaurantsUseCase;
+    public RestaurantController(IRestaurantHandler restaurantHandler) {
+        this.restaurantHandler = restaurantHandler;
     }
 
     @PostMapping("/restaurants")
     @Operation(summary = "HU-2 Create restaurant", description = "ADMIN only. ownerUserId must be a user with the PROPIETARIO role.")
-    public ResponseEntity<RestaurantResponse> createRestaurant(@RequestBody CreateRestaurantCommand command) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(createRestaurantUseCase.execute(command));
+    public ResponseEntity<RestaurantResponse> createRestaurant(@Valid @RequestBody CreateRestaurantRequest request) {
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(restaurantHandler.createRestaurant(RestaurantRequestMapper.toCommand(request)));
     }
 
     @GetMapping("/restaurants")
@@ -43,6 +44,6 @@ public class RestaurantController {
     public ResponseEntity<PageResult<RestaurantListItem>> listRestaurants(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
-        return ResponseEntity.ok(listRestaurantsUseCase.execute(page, size));
+        return ResponseEntity.ok(restaurantHandler.listRestaurants(page, size));
     }
 }

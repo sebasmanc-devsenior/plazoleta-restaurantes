@@ -5,6 +5,12 @@ import java.time.Clock;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import com.plazoleta.application.handler.DishHandler;
+import com.plazoleta.application.handler.IDishHandler;
+import com.plazoleta.application.handler.IOrderHandler;
+import com.plazoleta.application.handler.IRestaurantHandler;
+import com.plazoleta.application.handler.OrderHandler;
+import com.plazoleta.application.handler.RestaurantHandler;
 import com.plazoleta.application.port.input.CreateDishUseCase;
 import com.plazoleta.application.port.input.AssignOrderUseCase;
 import com.plazoleta.application.port.input.CancelOrderUseCase;
@@ -138,5 +144,32 @@ public class BeanConfiguration {
     @Bean
     public CancelOrderUseCase cancelOrderUseCase(OrderRepositoryPort orders, OrderTraceabilityPort traceability) {
         return new CancelOrderService(orders, traceability);
+    }
+
+    /** Handler de restaurantes (HU 2 y 9, y la consulta interna). */
+    @Bean
+    public IRestaurantHandler restaurantHandler(CreateRestaurantUseCase createRestaurantUseCase,
+                                                ListRestaurantsUseCase listRestaurantsUseCase,
+                                                GetRestaurantUseCase getRestaurantUseCase) {
+        return new RestaurantHandler(createRestaurantUseCase, listRestaurantsUseCase, getRestaurantUseCase);
+    }
+
+    /** Handler de platos (HU 3, 4, 7 y 10). */
+    @Bean
+    public IDishHandler dishHandler(CreateDishUseCase createDishUseCase, UpdateDishUseCase updateDishUseCase,
+                                    SetDishAvailabilityUseCase setDishAvailabilityUseCase,
+                                    ListRestaurantDishesUseCase listRestaurantDishesUseCase) {
+        return new DishHandler(createDishUseCase, updateDishUseCase, setDishAvailabilityUseCase,
+                listRestaurantDishesUseCase);
+    }
+
+    /** Handler de pedidos (HU 11 a 16). */
+    @Bean
+    public IOrderHandler orderHandler(CreateOrderUseCase createOrderUseCase,
+                                      ListOrdersByStatusUseCase listOrdersByStatusUseCase,
+                                      AssignOrderUseCase assignOrderUseCase, MarkOrderReadyUseCase markOrderReadyUseCase,
+                                      DeliverOrderUseCase deliverOrderUseCase, CancelOrderUseCase cancelOrderUseCase) {
+        return new OrderHandler(createOrderUseCase, listOrdersByStatusUseCase, assignOrderUseCase,
+                markOrderReadyUseCase, deliverOrderUseCase, cancelOrderUseCase);
     }
 }

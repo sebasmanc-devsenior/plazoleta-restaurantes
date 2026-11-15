@@ -1,6 +1,7 @@
 package com.plazoleta.infrastructure.input.rest;
 
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -13,41 +14,26 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.plazoleta.application.dto.CreateOrderCommand;
-import com.plazoleta.application.dto.DeliverOrderCommand;
 import com.plazoleta.application.dto.OrderResponse;
 import com.plazoleta.application.dto.PageResult;
-import com.plazoleta.application.port.input.AssignOrderUseCase;
-import com.plazoleta.application.port.input.CancelOrderUseCase;
-import com.plazoleta.application.port.input.CreateOrderUseCase;
-import com.plazoleta.application.port.input.DeliverOrderUseCase;
-import com.plazoleta.application.port.input.ListOrdersByStatusUseCase;
-import com.plazoleta.application.port.input.MarkOrderReadyUseCase;
+import com.plazoleta.application.handler.IOrderHandler;
 import com.plazoleta.infrastructure.configuration.security.AuthenticatedUserContext;
+import com.plazoleta.infrastructure.input.rest.dto.CreateOrderRequest;
+import com.plazoleta.infrastructure.input.rest.dto.DeliverOrderRequest;
+import com.plazoleta.infrastructure.input.rest.mapper.OrderRequestMapper;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
+/** Solo HTTP: valida el request con Jakarta, toma del token quién llama y su restaurante, y llama al handler. */
 @RestController
 @RequestMapping("/api")
 @Tag(name = "Orders")
 public class OrderController {
-    private final CreateOrderUseCase createOrderUseCase;
-    private final ListOrdersByStatusUseCase listOrdersByStatusUseCase;
-    private final AssignOrderUseCase assignOrderUseCase;
-    private final MarkOrderReadyUseCase markOrderReadyUseCase;
-    private final DeliverOrderUseCase deliverOrderUseCase;
-    private final CancelOrderUseCase cancelOrderUseCase;
+    private final IOrderHandler orderHandler;
 
-    public OrderController(CreateOrderUseCase createOrderUseCase, ListOrdersByStatusUseCase listOrdersByStatusUseCase,
-                           AssignOrderUseCase assignOrderUseCase, MarkOrderReadyUseCase markOrderReadyUseCase,
-                           DeliverOrderUseCase deliverOrderUseCase, CancelOrderUseCase cancelOrderUseCase) {
-        this.createOrderUseCase = createOrderUseCase;
-        this.listOrdersByStatusUseCase = listOrdersByStatusUseCase;
-        this.assignOrderUseCase = assignOrderUseCase;
-        this.markOrderReadyUseCase = markOrderReadyUseCase;
-        this.deliverOrderUseCase = deliverOrderUseCase;
-        this.cancelOrderUseCase = cancelOrderUseCase;
+    public OrderController(IOrderHandler orderHandler) {
+        this.orderHandler = orderHandler;
     }
 
     @PostMapping("/orders")
@@ -55,10 +41,11 @@ public class OrderController {
             description = "CLIENTE only. Dishes of one restaurant with their quantity; the order starts as PENDIENTE. "
                     + "The client account is checked against the users service. "
                     + "Rejected with 409 while the client has another order PENDIENTE, EN_PREPARACION or LISTO.")
-    public ResponseEntity<OrderResponse> createOrder(@RequestBody CreateOrderCommand command,
+    public ResponseEntity<OrderResponse> createOrder(@Valid @RequestBody CreateOrderRequest body,
                                                      HttpServletRequest request) {
         Long clientId = AuthenticatedUserContext.resolveUserId(request);
-        return ResponseEntity.status(HttpStatus.CREATED).body(createOrderUseCase.execute(command, clientId));
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(orderHandler.createOrder(OrderRequestMapper.toCommand(body), clientId));
     }
 
     @GetMapping("/orders")
@@ -68,9 +55,7 @@ public class OrderController {
     public ResponseEntity<PageResult<OrderResponse>> listOrders(@RequestParam String status,
                                                                 @RequestParam(defaultValue = "0") int page,
                                                                 @RequestParam(defaultValue = "10") int size) {
-        var principal = AuthenticatedUserContext.currentPrincipal();
-        Long restaurantId = principal == null ? null : principal.getRestaurantId();
-        return ResponseEntity.ok(listOrdersByStatusUseCase.execute(restaurantId, status, page, size));
+        return ResponseEntity.ok(orderHandler.listOrdersByStatus(employeeRestaurantId(), status, page, size));
     }
 
     @PatchMapping("/orders/{orderId}/assign")
@@ -79,9 +64,7 @@ public class OrderController {
                     + "from PENDIENTE to EN_PREPARACION. Only orders of the employee's restaurant.")
     public ResponseEntity<OrderResponse> assignOrder(@PathVariable Long orderId, HttpServletRequest request) {
         Long employeeId = AuthenticatedUserContext.resolveUserId(request);
-        var principal = AuthenticatedUserContext.currentPrincipal();
-        Long restaurantId = principal == null ? null : principal.getRestaurantId();
-        return ResponseEntity.ok(assignOrderUseCase.execute(orderId, employeeId, restaurantId));
+        return ResponseEntity.ok(orderHandler.assignOrder(orderId, employeeId, employeeRestaurantId()));
     }
 
     @PatchMapping("/orders/{orderId}/ready")
@@ -90,9 +73,7 @@ public class OrderController {
                     + "with the security PIN to claim it. The PIN is never returned by the API.")
     public ResponseEntity<OrderResponse> markOrderReady(@PathVariable Long orderId, HttpServletRequest request) {
         Long employeeId = AuthenticatedUserContext.resolveUserId(request);
-        var principal = AuthenticatedUserContext.currentPrincipal();
-        Long restaurantId = principal == null ? null : principal.getRestaurantId();
-        return ResponseEntity.ok(markOrderReadyUseCase.execute(orderId, employeeId, restaurantId));
+        return ResponseEntity.ok(orderHandler.markOrderReady(orderId, employeeId, employeeRestaurantId()));
     }
 
     @PatchMapping("/orders/{orderId}/deliver")
@@ -100,12 +81,11 @@ public class OrderController {
             description = "Only the assigned EMPLEADO. The order goes from LISTO to ENTREGADO when the PIN typed by "
                     + "the employee is the one the client received by SMS. ENTREGADO is final.")
     public ResponseEntity<OrderResponse> deliverOrder(@PathVariable Long orderId,
-                                                      @RequestBody DeliverOrderCommand command,
+                                                      @Valid @RequestBody DeliverOrderRequest body,
                                                       HttpServletRequest request) {
         Long employeeId = AuthenticatedUserContext.resolveUserId(request);
-        var principal = AuthenticatedUserContext.currentPrincipal();
-        Long restaurantId = principal == null ? null : principal.getRestaurantId();
-        return ResponseEntity.ok(deliverOrderUseCase.execute(orderId, command, employeeId, restaurantId));
+        return ResponseEntity.ok(orderHandler.deliverOrder(orderId, OrderRequestMapper.toCommand(body), employeeId,
+                employeeRestaurantId()));
     }
 
     @PatchMapping("/orders/{orderId}/cancel")
@@ -114,6 +94,12 @@ public class OrderController {
                     + "status the answer is 409 with the message that it can no longer be cancelled.")
     public ResponseEntity<OrderResponse> cancelOrder(@PathVariable Long orderId, HttpServletRequest request) {
         Long clientId = AuthenticatedUserContext.resolveUserId(request);
-        return ResponseEntity.ok(cancelOrderUseCase.execute(orderId, clientId));
+        return ResponseEntity.ok(orderHandler.cancelOrder(orderId, clientId));
+    }
+
+    /** Restaurante del empleado, tomado del token (null si el token no lo trae). */
+    private static Long employeeRestaurantId() {
+        var principal = AuthenticatedUserContext.currentPrincipal();
+        return principal == null ? null : principal.getRestaurantId();
     }
 }
