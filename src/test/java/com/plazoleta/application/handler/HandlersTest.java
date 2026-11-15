@@ -1,0 +1,117 @@
+package com.plazoleta.application.handler;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+import java.util.List;
+
+import org.junit.jupiter.api.Test;
+
+import com.plazoleta.application.dto.CreateDishCommand;
+import com.plazoleta.application.dto.CreateOrderCommand;
+import com.plazoleta.application.dto.CreateRestaurantCommand;
+import com.plazoleta.application.dto.DeliverOrderCommand;
+import com.plazoleta.application.dto.DishResponse;
+import com.plazoleta.application.dto.OrderItemCommand;
+import com.plazoleta.application.dto.OrderResponse;
+import com.plazoleta.application.dto.PageResult;
+import com.plazoleta.application.dto.RestaurantListItem;
+import com.plazoleta.application.dto.RestaurantResponse;
+import com.plazoleta.application.dto.UpdateDishCommand;
+import com.plazoleta.application.port.input.AssignOrderUseCase;
+import com.plazoleta.application.port.input.CancelOrderUseCase;
+import com.plazoleta.application.port.input.CreateDishUseCase;
+import com.plazoleta.application.port.input.CreateOrderUseCase;
+import com.plazoleta.application.port.input.CreateRestaurantUseCase;
+import com.plazoleta.application.port.input.DeliverOrderUseCase;
+import com.plazoleta.application.port.input.GetRestaurantUseCase;
+import com.plazoleta.application.port.input.ListOrdersByStatusUseCase;
+import com.plazoleta.application.port.input.ListRestaurantDishesUseCase;
+import com.plazoleta.application.port.input.ListRestaurantsUseCase;
+import com.plazoleta.application.port.input.MarkOrderReadyUseCase;
+import com.plazoleta.application.port.input.SetDishAvailabilityUseCase;
+import com.plazoleta.application.port.input.UpdateDishUseCase;
+
+/**
+ * Los handlers no deciden nada: cada método pasa sus datos, sin cambiarlos, al caso de uso que le corresponde y
+ * devuelve la misma respuesta.
+ */
+class HandlersTest {
+    private final CreateRestaurantUseCase createRestaurant = mock(CreateRestaurantUseCase.class);
+    private final ListRestaurantsUseCase listRestaurants = mock(ListRestaurantsUseCase.class);
+    private final GetRestaurantUseCase getRestaurant = mock(GetRestaurantUseCase.class);
+    private final RestaurantHandler restaurantHandler =
+            new RestaurantHandler(createRestaurant, listRestaurants, getRestaurant);
+
+    private final CreateDishUseCase createDish = mock(CreateDishUseCase.class);
+    private final UpdateDishUseCase updateDish = mock(UpdateDishUseCase.class);
+    private final SetDishAvailabilityUseCase setAvailability = mock(SetDishAvailabilityUseCase.class);
+    private final ListRestaurantDishesUseCase listDishes = mock(ListRestaurantDishesUseCase.class);
+    private final DishHandler dishHandler = new DishHandler(createDish, updateDish, setAvailability, listDishes);
+
+    private final CreateOrderUseCase createOrder = mock(CreateOrderUseCase.class);
+    private final ListOrdersByStatusUseCase listOrders = mock(ListOrdersByStatusUseCase.class);
+    private final AssignOrderUseCase assignOrder = mock(AssignOrderUseCase.class);
+    private final MarkOrderReadyUseCase markReady = mock(MarkOrderReadyUseCase.class);
+    private final DeliverOrderUseCase deliverOrder = mock(DeliverOrderUseCase.class);
+    private final CancelOrderUseCase cancelOrder = mock(CancelOrderUseCase.class);
+    private final OrderHandler orderHandler =
+            new OrderHandler(createOrder, listOrders, assignOrder, markReady, deliverOrder, cancelOrder);
+
+    @Test
+    void restaurantHandlerDelegatesEachOperation() {
+        CreateRestaurantCommand command = new CreateRestaurantCommand("Sopas", "900", "Calle 1", "3001234567",
+                "https://logo.png", 5L);
+        RestaurantResponse restaurant = mock(RestaurantResponse.class);
+        PageResult<RestaurantListItem> page = new PageResult<>(List.of(), 0, 10, 0);
+        when(createRestaurant.execute(command)).thenReturn(restaurant);
+        when(listRestaurants.execute(0, 10)).thenReturn(page);
+        when(getRestaurant.execute(3L)).thenReturn(restaurant);
+
+        assertThat(restaurantHandler.createRestaurant(command)).isSameAs(restaurant);
+        assertThat(restaurantHandler.listRestaurants(0, 10)).isSameAs(page);
+        assertThat(restaurantHandler.getRestaurant(3L)).isSameAs(restaurant);
+    }
+
+    @Test
+    void dishHandlerPassesTheOwnerFromTheTokenToEachUseCase() {
+        CreateDishCommand create = new CreateDishCommand("Sopa", 12000, "Caliente", "https://img.png", "Sopas", 3L);
+        UpdateDishCommand update = new UpdateDishCommand(15000, "Más grande");
+        DishResponse dish = mock(DishResponse.class);
+        PageResult<DishResponse> page = new PageResult<>(List.of(dish), 0, 10, 1);
+        when(createDish.execute(create, 55L)).thenReturn(dish);
+        when(updateDish.execute(9L, update, 55L)).thenReturn(dish);
+        when(setAvailability.execute(9L, false, 55L)).thenReturn(dish);
+        when(listDishes.execute(3L, "Sopas", 0, 10)).thenReturn(page);
+
+        assertThat(dishHandler.createDish(create, 55L)).isSameAs(dish);
+        assertThat(dishHandler.updateDish(9L, update, 55L)).isSameAs(dish);
+        assertThat(dishHandler.setDishAvailability(9L, false, 55L)).isSameAs(dish);
+        assertThat(dishHandler.listRestaurantDishes(3L, "Sopas", 0, 10)).isSameAs(page);
+        verify(setAvailability).execute(9L, false, 55L);
+    }
+
+    @Test
+    void orderHandlerPassesWhoCallsAndTheirRestaurantToEachUseCase() {
+        CreateOrderCommand create = new CreateOrderCommand(3L, List.of(new OrderItemCommand(4L, 2)));
+        DeliverOrderCommand deliver = new DeliverOrderCommand("048213");
+        OrderResponse order = mock(OrderResponse.class);
+        PageResult<OrderResponse> page = new PageResult<>(List.of(order), 0, 10, 1);
+        when(createOrder.execute(create, 7L)).thenReturn(order);
+        when(listOrders.execute(3L, "PENDIENTE", 0, 10)).thenReturn(page);
+        when(assignOrder.execute(20L, 8L, 3L)).thenReturn(order);
+        when(markReady.execute(20L, 8L, 3L)).thenReturn(order);
+        when(deliverOrder.execute(20L, deliver, 8L, 3L)).thenReturn(order);
+        when(cancelOrder.execute(20L, 7L)).thenReturn(order);
+
+        assertThat(orderHandler.createOrder(create, 7L)).isSameAs(order);
+        assertThat(orderHandler.listOrdersByStatus(3L, "PENDIENTE", 0, 10)).isSameAs(page);
+        assertThat(orderHandler.assignOrder(20L, 8L, 3L)).isSameAs(order);
+        assertThat(orderHandler.markOrderReady(20L, 8L, 3L)).isSameAs(order);
+        assertThat(orderHandler.deliverOrder(20L, deliver, 8L, 3L)).isSameAs(order);
+        assertThat(orderHandler.cancelOrder(20L, 7L)).isSameAs(order);
+        verify(deliverOrder).execute(20L, deliver, 8L, 3L);
+    }
+}
