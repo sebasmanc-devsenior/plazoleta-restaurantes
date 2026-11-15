@@ -13,10 +13,10 @@ public class OrderResponse {
     private final LocalDateTime createdAt;
     /** HU-13: empleado asignado; null mientras nadie se haya asignado el pedido. */
     private final Long employeeId;
-    private final List<OrderItemCommand> dishes;
+    private final List<OrderItemResponse> dishes;
 
     public OrderResponse(Long id, Long clientId, Long restaurantId, String status, LocalDateTime createdAt,
-                         Long employeeId, List<OrderItemCommand> dishes) {
+                         Long employeeId, List<OrderItemResponse> dishes) {
         this.id = id;
         this.clientId = clientId;
         this.restaurantId = restaurantId;
@@ -29,7 +29,7 @@ public class OrderResponse {
     public static OrderResponse from(Order order) {
         return new OrderResponse(order.getId(), order.getClientId(), order.getRestaurantId(), order.getStatus().name(),
                 order.getCreatedAt(), order.getEmployeeId(), order.getItems().stream()
-                        .map(item -> new OrderItemCommand(item.getDishId(), item.getQuantity()))
+                        .map(item -> new OrderItemResponse(item.getDishId(), item.getQuantity()))
                         .toList());
     }
 
@@ -39,5 +39,5 @@ public class OrderResponse {
     public String getStatus() { return status; }
     public LocalDateTime getCreatedAt() { return createdAt; }
     public Long getEmployeeId() { return employeeId; }
-    public List<OrderItemCommand> getDishes() { return dishes; }
+    public List<OrderItemResponse> getDishes() { return dishes; }
 }
