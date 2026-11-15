@@ -49,6 +49,7 @@ src/main/java/com/plazoleta/
     │   ├── persistence/
     │   │   ├── entity/         RestaurantEntity, DishEntity (tablas)
     │   │   ├── repository/     RestaurantJpaRepository, DishJpaRepository (Spring Data JPA)
+    │   │   ├── mapper/         RestaurantEntityMapper, DishEntityMapper, OrderEntityMapper (entidad ↔ dominio)
     │   │   └── adapter/        RestaurantPersistenceAdapter, DishPersistenceAdapter (implementan los puertos)
     │   └── http/               consulta de usuarios al microservicio de usuarios
     └── configuration/          BeanConfiguration (inyección), seguridad, OpenAPI; security/ = filtros JWT
