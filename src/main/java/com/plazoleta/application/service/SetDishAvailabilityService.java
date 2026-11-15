@@ -25,16 +25,16 @@ public class SetDishAvailabilityService implements SetDishAvailabilityUseCase {
     @Override
     public DishResponse execute(Long dishId, boolean active, Long authenticatedOwnerId) {
         var owner = userRepositoryPort.findById(authenticatedOwnerId)
-                .orElseThrow(() -> new RestaurantOwnershipException("Authenticated user was not found"));
+                .orElseThrow(() -> new RestaurantOwnershipException("El usuario autenticado no existe"));
         if (owner.getRole() != Role.PROPIETARIO) {
-            throw new RestaurantOwnershipException("Only an owner can enable or disable dishes");
+            throw new RestaurantOwnershipException("Solo un propietario puede habilitar o deshabilitar platos");
         }
         var dish = dishRepositoryPort.findById(dishId)
-                .orElseThrow(() -> new DishNotFoundException("Dish was not found"));
+                .orElseThrow(() -> new DishNotFoundException("El plato no existe"));
         var restaurant = restaurantRepositoryPort.findById(dish.getRestaurantId())
-                .orElseThrow(() -> new RestaurantOwnershipException("The dish's restaurant was not found"));
+                .orElseThrow(() -> new RestaurantOwnershipException("El restaurante del plato no existe"));
         if (!restaurant.getOwnerUserId().equals(authenticatedOwnerId)) {
-            throw new RestaurantOwnershipException("You cannot modify dishes from another restaurant");
+            throw new RestaurantOwnershipException("No puedes modificar platos de otro restaurante");
         }
         if (active) {
             dish.activate();

@@ -27,20 +27,20 @@ public class CreateDishService implements CreateDishUseCase {
     @Override
     public DishResponse execute(CreateDishCommand command, Long authenticatedOwnerId) {
         if (command == null) {
-            throw new IllegalArgumentException("Request body is required");
+            throw new IllegalArgumentException("El cuerpo de la petición es obligatorio");
         }
 
         User owner = userRepositoryPort.findById(authenticatedOwnerId)
-                .orElseThrow(() -> new IllegalArgumentException("Authenticated user was not found"));
+                .orElseThrow(() -> new IllegalArgumentException("El usuario autenticado no existe"));
         if (owner.getRole() != Role.PROPIETARIO) {
-            throw new RestaurantOwnershipException("Only an owner can create dishes");
+            throw new RestaurantOwnershipException("Solo un propietario puede crear platos");
         }
 
         Restaurant restaurant = restaurantRepositoryPort.findById(command.getRestaurantId())
-                .orElseThrow(() -> new RestaurantNotFoundException("Restaurant was not found"));
+                .orElseThrow(() -> new RestaurantNotFoundException("El restaurante no existe"));
 
         if (!restaurant.getOwnerUserId().equals(authenticatedOwnerId)) {
-            throw new RestaurantOwnershipException("The owner does not own this restaurant");
+            throw new RestaurantOwnershipException("El propietario no es dueño de este restaurante");
         }
 
         Dish dish = new Dish(null, command.getName(), command.getPrice(), command.getDescription(), command.getImageUrl(),

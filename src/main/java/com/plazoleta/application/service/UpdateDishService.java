@@ -27,22 +27,22 @@ public class UpdateDishService implements UpdateDishUseCase {
     @Override
     public DishResponse execute(Long dishId, UpdateDishCommand command, Long authenticatedOwnerId) {
         if (command == null) {
-            throw new IllegalArgumentException("Request body is required");
+            throw new IllegalArgumentException("El cuerpo de la petición es obligatorio");
         }
         User owner = userRepositoryPort.findById(authenticatedOwnerId)
-                .orElseThrow(() -> new IllegalArgumentException("Authenticated user was not found"));
+                .orElseThrow(() -> new IllegalArgumentException("El usuario autenticado no existe"));
         if (owner.getRole() != Role.PROPIETARIO) {
-            throw new RestaurantOwnershipException("Only an owner can modify dishes");
+            throw new RestaurantOwnershipException("Solo un propietario puede modificar platos");
         }
 
         Dish dish = dishRepositoryPort.findById(dishId)
-                .orElseThrow(() -> new DishNotFoundException("Dish was not found"));
+                .orElseThrow(() -> new DishNotFoundException("El plato no existe"));
 
         Restaurant restaurant = restaurantRepositoryPort.findById(dish.getRestaurantId())
-                .orElseThrow(() -> new IllegalArgumentException("The dish's restaurant was not found"));
+                .orElseThrow(() -> new IllegalArgumentException("El restaurante del plato no existe"));
 
         if (!restaurant.getOwnerUserId().equals(authenticatedOwnerId)) {
-            throw new RestaurantOwnershipException("The owner does not own this restaurant");
+            throw new RestaurantOwnershipException("El propietario no es dueño de este restaurante");
         }
 
         dish.updatePriceAndDescription(command.getPrice(), command.getDescription());

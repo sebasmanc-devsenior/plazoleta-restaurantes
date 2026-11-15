@@ -67,10 +67,10 @@ public class RemoteUserRepository implements UserRepositoryPort {
             if (ex.getStatusCode().value() == 404) {
                 return Optional.empty();
             }
-            throw new IntegrationUnavailableException("Users service rejected the lookup (HTTP "
+            throw new IntegrationUnavailableException("El servicio de usuarios rechazó la consulta (HTTP "
                     + ex.getStatusCode().value() + ")", ex);
         } catch (RestClientException ex) {
-            throw new IntegrationUnavailableException("Users service is unavailable", ex);
+            throw new IntegrationUnavailableException("El servicio de usuarios no está disponible", ex);
         }
     }
 

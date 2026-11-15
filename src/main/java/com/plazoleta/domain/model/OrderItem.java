@@ -7,10 +7,10 @@ public class OrderItem {
 
     public OrderItem(Long dishId, Integer quantity) {
         if (dishId == null) {
-            throw new IllegalArgumentException("Each order item needs a dishId");
+            throw new IllegalArgumentException("Cada plato del pedido necesita un dishId");
         }
         if (quantity == null || quantity <= 0) {
-            throw new IllegalArgumentException("Quantity must be an integer greater than 0");
+            throw new IllegalArgumentException("La cantidad debe ser un número entero mayor que 0");
         }
         this.dishId = dishId;
         this.quantity = quantity;

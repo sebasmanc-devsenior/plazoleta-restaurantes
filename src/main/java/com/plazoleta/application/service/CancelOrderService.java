@@ -22,10 +22,10 @@ public class CancelOrderService implements CancelOrderUseCase {
     @Override
     public OrderResponse execute(Long orderId, Long clientId) {
         Order order = orderRepositoryPort.findById(orderId)
-                .orElseThrow(() -> new OrderNotFoundException("Order was not found"));
+                .orElseThrow(() -> new OrderNotFoundException("El pedido no existe"));
         // Un cliente solo puede cancelar sus propios pedidos.
         if (!order.getClientId().equals(clientId)) {
-            throw new ForbiddenOperationException("The order belongs to another client");
+            throw new ForbiddenOperationException("El pedido pertenece a otro cliente");
         }
         OrderStatus previousStatus = order.getStatus();
         order.cancel();

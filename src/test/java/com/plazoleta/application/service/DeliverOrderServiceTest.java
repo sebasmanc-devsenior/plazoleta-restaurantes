@@ -140,7 +140,7 @@ class DeliverOrderServiceTest {
         orderIs(OrderStatus.LISTO);
 
         assertThatThrownBy(() -> service.execute(ORDER_ID, new DeliverOrderCommand(PIN), 10L, RESTAURANT_ID))
-                .isInstanceOf(ForbiddenOperationException.class).hasMessageContaining("another employee");
+                .isInstanceOf(ForbiddenOperationException.class).hasMessageContaining("otro empleado");
         verify(orderRepositoryPort, never()).updateIfStatus(any(), any());
     }
 

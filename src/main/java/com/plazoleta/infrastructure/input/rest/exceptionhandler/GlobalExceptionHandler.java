@@ -41,7 +41,7 @@ public class GlobalExceptionHandler {
         MethodArgumentTypeMismatchException.class
     })
     public ResponseEntity<ErrorResponse> handleMalformedRequest(Exception ex, HttpServletRequest request) {
-        return buildResponse(HttpStatus.BAD_REQUEST, "Request is malformed or missing parameters",
+        return buildResponse(HttpStatus.BAD_REQUEST, "La petición está mal formada o le faltan parámetros",
                 request.getRequestURI());
     }
 
@@ -76,7 +76,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(IllegalStateException.class)
     public ResponseEntity<ErrorResponse> handleUnexpectedState(IllegalStateException ex, HttpServletRequest request) {
         log.error("Unexpected state at {}", request.getRequestURI(), ex);
-        return buildResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Internal server error", request.getRequestURI());
+        return buildResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Error interno del servidor", request.getRequestURI());
     }
 
     private ResponseEntity<ErrorResponse> buildResponse(HttpStatus status, String message, String path) {

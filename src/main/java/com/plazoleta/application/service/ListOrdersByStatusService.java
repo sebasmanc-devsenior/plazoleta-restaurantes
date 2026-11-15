@@ -20,7 +20,7 @@ public class ListOrdersByStatusService implements ListOrdersByStatusUseCase {
     public PageResult<OrderResponse> execute(Long employeeRestaurantId, String status, int page, int size) {
         // El restaurante sale del token del empleado: solo ve los pedidos del restaurante donde trabaja.
         if (employeeRestaurantId == null) {
-            throw new ForbiddenOperationException("The employee is not linked to a restaurant");
+            throw new ForbiddenOperationException("El empleado no está vinculado a un restaurante");
         }
         ListRestaurantsService.validatePage(page, size);
         OrderStatus orderStatus = parseStatus(status);
@@ -31,13 +31,13 @@ public class ListOrdersByStatusService implements ListOrdersByStatusUseCase {
 
     static OrderStatus parseStatus(String status) {
         if (status == null || status.isBlank()) {
-            throw new IllegalArgumentException("Status is required");
+            throw new IllegalArgumentException("El estado es obligatorio");
         }
         try {
             return OrderStatus.valueOf(status.trim().toUpperCase(Locale.ROOT));
         } catch (IllegalArgumentException ex) {
             throw new IllegalArgumentException(
-                    "Unknown status. Use PENDIENTE, EN_PREPARACION, LISTO, ENTREGADO or CANCELADO");
+                    "Estado desconocido. Usa PENDIENTE, EN_PREPARACION, LISTO, ENTREGADO o CANCELADO");
         }
     }
 }

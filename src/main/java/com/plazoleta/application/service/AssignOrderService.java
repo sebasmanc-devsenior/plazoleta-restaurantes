@@ -27,7 +27,7 @@ public class AssignOrderService implements AssignOrderUseCase {
         // Solo se guarda si el pedido sigue PENDIENTE en la base: si dos empleados compiten, gana uno.
         if (!orderRepositoryPort.updateIfStatus(order, previousStatus)) {
             throw new InvalidOrderStatusException(
-                    "The order was just taken or cancelled; only PENDIENTE orders can be assigned");
+                    "El pedido acaba de ser tomado o cancelado; solo se pueden asignar pedidos PENDIENTE");
         }
         orderTraceabilityPort.record(order, previousStatus);
         return OrderResponse.from(order);
@@ -36,12 +36,12 @@ public class AssignOrderService implements AssignOrderUseCase {
     /** Busca el pedido y comprueba que sea del restaurante donde trabaja el empleado (HU-13 a HU-15). */
     static Order findOrderOfEmployeeRestaurant(OrderRepositoryPort orders, Long orderId, Long employeeRestaurantId) {
         if (employeeRestaurantId == null) {
-            throw new ForbiddenOperationException("The employee is not linked to a restaurant");
+            throw new ForbiddenOperationException("El empleado no está vinculado a un restaurante");
         }
         Order order = orders.findById(orderId)
-                .orElseThrow(() -> new OrderNotFoundException("Order was not found"));
+                .orElseThrow(() -> new OrderNotFoundException("El pedido no existe"));
         if (!order.getRestaurantId().equals(employeeRestaurantId)) {
-            throw new ForbiddenOperationException("The order belongs to another restaurant");
+            throw new ForbiddenOperationException("El pedido pertenece a otro restaurante");
         }
         return order;
     }
@@ -49,7 +49,7 @@ public class AssignOrderService implements AssignOrderUseCase {
     /** Desde que un empleado se asigna el pedido, solo él puede avanzarlo (HU-14 y HU-15). */
     static void requireAssignedEmployee(Order order, Long employeeId) {
         if (order.getEmployeeId() != null && !order.getEmployeeId().equals(employeeId)) {
-            throw new ForbiddenOperationException("The order is assigned to another employee");
+            throw new ForbiddenOperationException("El pedido está asignado a otro empleado");
         }
     }
 }

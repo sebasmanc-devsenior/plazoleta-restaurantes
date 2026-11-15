@@ -137,6 +137,6 @@ class CreateDishServiceTest {
 
         assertThatThrownBy(() -> service.execute(noCategory, OWNER_ID))
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("Category");
+                .hasMessageContaining("categoría");
     }
 }
