@@ -1,5 +1,7 @@
 package com.plazoleta.application.service;
 
+import com.plazoleta.domain.util.MensajesError;
+
 import java.util.Locale;
 
 import com.plazoleta.application.dto.OrderResponse;
@@ -20,7 +22,7 @@ public class ListOrdersByStatusService implements ListOrdersByStatusUseCase {
     public PageResult<OrderResponse> execute(Long employeeRestaurantId, String status, int page, int size) {
         // El restaurante sale del token del empleado: solo ve los pedidos del restaurante donde trabaja.
         if (employeeRestaurantId == null) {
-            throw new ForbiddenOperationException("El empleado no está vinculado a un restaurante");
+            throw new ForbiddenOperationException(MensajesError.EMPLEADO_NO_ESTA_VINCULADO_A_UN_RESTAURANTE);
         }
         ListRestaurantsService.validatePage(page, size);
         OrderStatus orderStatus = parseStatus(status);
@@ -31,13 +33,13 @@ public class ListOrdersByStatusService implements ListOrdersByStatusUseCase {
 
     static OrderStatus parseStatus(String status) {
         if (status == null || status.isBlank()) {
-            throw new IllegalArgumentException("El estado es obligatorio");
+            throw new IllegalArgumentException(MensajesError.ESTADO_ES_OBLIGATORIO);
         }
         try {
             return OrderStatus.valueOf(status.trim().toUpperCase(Locale.ROOT));
         } catch (IllegalArgumentException ex) {
             throw new IllegalArgumentException(
-                    "Estado desconocido. Usa PENDIENTE, EN_PREPARACION, LISTO, ENTREGADO o CANCELADO");
+                    MensajesError.ESTADO_DESCONOCIDO_USA_PENDIENTE_EN_PREPARACION_LISTO);
         }
     }
 }

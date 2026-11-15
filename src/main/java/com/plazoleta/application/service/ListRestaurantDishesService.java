@@ -1,5 +1,7 @@
 package com.plazoleta.application.service;
 
+import com.plazoleta.domain.util.MensajesError;
+
 import com.plazoleta.application.dto.DishResponse;
 import com.plazoleta.application.dto.PageResult;
 import com.plazoleta.application.port.input.ListRestaurantDishesUseCase;
@@ -21,10 +23,10 @@ public class ListRestaurantDishesService implements ListRestaurantDishesUseCase 
     public PageResult<DishResponse> execute(Long restaurantId, String category, int page, int size) {
         ListRestaurantsService.validatePage(page, size);
         if (restaurantId == null) {
-            throw new IllegalArgumentException("El id del restaurante es obligatorio");
+            throw new IllegalArgumentException(MensajesError.ID_DEL_RESTAURANTE_ES_OBLIGATORIO);
         }
         if (restaurantRepositoryPort.findById(restaurantId).isEmpty()) {
-            throw new RestaurantNotFoundException("El restaurante no existe");
+            throw new RestaurantNotFoundException(MensajesError.RESTAURANTE_NO_EXISTE);
         }
         String categoryFilter = category == null || category.isBlank() ? null : category.trim();
         // El menú incluye los platos deshabilitados (HU-7): el cliente los ve con active = false,

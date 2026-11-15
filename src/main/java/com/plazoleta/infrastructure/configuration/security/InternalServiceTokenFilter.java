@@ -1,5 +1,7 @@
 package com.plazoleta.infrastructure.configuration.security;
 
+import com.plazoleta.domain.util.MensajesError;
+
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
@@ -28,7 +30,7 @@ public class InternalServiceTokenFilter extends OncePerRequestFilter {
 
     public InternalServiceTokenFilter(String internalToken) {
         if (internalToken == null || internalToken.isBlank()) {
-            throw new IllegalStateException("Configura USERS_INTERNAL_TOKEN para proteger las rutas internas");
+            throw new IllegalStateException(MensajesError.CONFIGURA_USERS_INTERNAL_TOKEN_PARA_PROTEGER_LAS);
         }
         this.expectedToken = internalToken.getBytes(StandardCharsets.UTF_8);
     }

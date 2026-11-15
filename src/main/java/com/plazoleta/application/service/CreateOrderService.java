@@ -1,5 +1,7 @@
 package com.plazoleta.application.service;
 
+import com.plazoleta.domain.util.MensajesError;
+
 import java.time.Clock;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -46,18 +48,18 @@ public class CreateOrderService implements CreateOrderUseCase {
     @Override
     public OrderResponse execute(CreateOrderCommand command, Long clientId) {
         if (command == null) {
-            throw new IllegalArgumentException("El cuerpo de la petición es obligatorio");
+            throw new IllegalArgumentException(MensajesError.CUERPO_DE_LA_PETICION_ES_OBLIGATORIO);
         }
         if (command.getRestaurantId() == null) {
-            throw new IllegalArgumentException("El restaurante es obligatorio");
+            throw new IllegalArgumentException(MensajesError.RESTAURANTE_ES_OBLIGATORIO);
         }
         if (command.getDishes() == null || command.getDishes().isEmpty()) {
-            throw new IllegalArgumentException("El pedido debe tener al menos un plato");
+            throw new IllegalArgumentException(MensajesError.PEDIDO_DEBE_TENER_AL_MENOS_UN_PLATO);
         }
         List<OrderItem> items = command.getDishes().stream()
                 .map(item -> {
                     if (item == null) {
-                        throw new IllegalArgumentException("Cada plato del pedido necesita un dishId");
+                        throw new IllegalArgumentException(MensajesError.CADA_PLATO_DEL_PEDIDO_NECESITA_UN_DISHID);
                     }
                     return new OrderItem(item.getDishId(), item.getQuantity());
                 })
@@ -66,25 +68,25 @@ public class CreateOrderService implements CreateOrderUseCase {
 
         // Conexión con el microservicio de usuarios: la cuenta del cliente debe existir y tener rol CLIENTE.
         User client = userRepositoryPort.findRegisteredById(clientId)
-                .orElseThrow(() -> new UserNotFoundException("La cuenta del cliente no existe"));
+                .orElseThrow(() -> new UserNotFoundException(MensajesError.CUENTA_DEL_CLIENTE_NO_EXISTE));
         if (client.getRole() != Role.CLIENTE) {
-            throw new ForbiddenOperationException("Solo un cliente puede hacer pedidos");
+            throw new ForbiddenOperationException(MensajesError.SOLO_UN_CLIENTE_PUEDE_HACER_PEDIDOS);
         }
         if (restaurantRepositoryPort.findById(order.getRestaurantId()).isEmpty()) {
-            throw new RestaurantNotFoundException("El restaurante no existe");
+            throw new RestaurantNotFoundException(MensajesError.RESTAURANTE_NO_EXISTE);
         }
         if (orderRepositoryPort.existsByClientIdAndStatusIn(clientId, OrderStatus.IN_PROCESS)) {
             throw new ActiveOrderExistsException(
-                    "Ya tienes un pedido en proceso (pendiente, en preparación o listo)");
+                    MensajesError.YA_TIENES_UN_PEDIDO_EN_PROCESO_PENDIENTE);
         }
         for (OrderItem item : order.getItems()) {
             Dish dish = dishRepositoryPort.findById(item.getDishId())
-                    .orElseThrow(() -> new DishNotFoundException("El plato " + item.getDishId() + " no existe"));
+                    .orElseThrow(() -> new DishNotFoundException(String.format(MensajesError.PLATO_CON_ID_NO_EXISTE, item.getDishId())));
             if (!dish.getRestaurantId().equals(order.getRestaurantId())) {
-                throw new IllegalArgumentException("Todos los platos deben ser del restaurante seleccionado");
+                throw new IllegalArgumentException(MensajesError.TODOS_LOS_PLATOS_DEBEN_SER_DEL_RESTAURANTE);
             }
             if (!dish.isActive()) {
-                throw new IllegalArgumentException("El plato " + dish.getId() + " no está disponible");
+                throw new IllegalArgumentException(String.format(MensajesError.PLATO_NO_DISPONIBLE, dish.getId()));
             }
         }
         Order saved = orderRepositoryPort.save(order);

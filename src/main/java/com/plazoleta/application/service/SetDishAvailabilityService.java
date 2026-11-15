@@ -1,5 +1,7 @@
 package com.plazoleta.application.service;
 
+import com.plazoleta.domain.util.MensajesError;
+
 import com.plazoleta.application.dto.DishResponse;
 import com.plazoleta.application.port.input.SetDishAvailabilityUseCase;
 import com.plazoleta.application.port.output.DishRepositoryPort;
@@ -25,16 +27,16 @@ public class SetDishAvailabilityService implements SetDishAvailabilityUseCase {
     @Override
     public DishResponse execute(Long dishId, boolean active, Long authenticatedOwnerId) {
         var owner = userRepositoryPort.findById(authenticatedOwnerId)
-                .orElseThrow(() -> new RestaurantOwnershipException("El usuario autenticado no existe"));
+                .orElseThrow(() -> new RestaurantOwnershipException(MensajesError.USUARIO_AUTENTICADO_NO_EXISTE));
         if (owner.getRole() != Role.PROPIETARIO) {
-            throw new RestaurantOwnershipException("Solo un propietario puede habilitar o deshabilitar platos");
+            throw new RestaurantOwnershipException(MensajesError.SOLO_UN_PROPIETARIO_PUEDE_HABILITAR_O_DESHABILITAR);
         }
         var dish = dishRepositoryPort.findById(dishId)
-                .orElseThrow(() -> new DishNotFoundException("El plato no existe"));
+                .orElseThrow(() -> new DishNotFoundException(MensajesError.PLATO_NO_EXISTE));
         var restaurant = restaurantRepositoryPort.findById(dish.getRestaurantId())
-                .orElseThrow(() -> new RestaurantOwnershipException("El restaurante del plato no existe"));
+                .orElseThrow(() -> new RestaurantOwnershipException(MensajesError.RESTAURANTE_DEL_PLATO_NO_EXISTE));
         if (!restaurant.getOwnerUserId().equals(authenticatedOwnerId)) {
-            throw new RestaurantOwnershipException("No puedes modificar platos de otro restaurante");
+            throw new RestaurantOwnershipException(MensajesError.NO_PUEDES_MODIFICAR_PLATOS_DE_OTRO_RESTAURANTE);
         }
         if (active) {
             dish.activate();

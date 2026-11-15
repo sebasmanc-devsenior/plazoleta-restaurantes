@@ -1,5 +1,7 @@
 package com.plazoleta.infrastructure.output.http;
 
+import com.plazoleta.domain.util.MensajesError;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import java.time.Duration;
 import java.util.Map;
@@ -43,10 +45,10 @@ public class RemoteSmsNotificationAdapter implements SmsNotificationPort {
                     .body(Map.of("phone", phone, "message", message))
                     .retrieve().toBodilessEntity();
         } catch (RestClientResponseException ex) {
-            throw new IntegrationUnavailableException("El servicio de mensajería rechazó el SMS (HTTP "
+            throw new IntegrationUnavailableException(MensajesError.SERVICIO_DE_MENSAJERIA_RECHAZO_EL_SMS_HTTP
                     + ex.getStatusCode().value() + ")", ex);
         } catch (RestClientException ex) {
-            throw new IntegrationUnavailableException("El servicio de mensajería no está disponible", ex);
+            throw new IntegrationUnavailableException(MensajesError.SERVICIO_DE_MENSAJERIA_NO_ESTA_DISPONIBLE, ex);
         }
     }
 }

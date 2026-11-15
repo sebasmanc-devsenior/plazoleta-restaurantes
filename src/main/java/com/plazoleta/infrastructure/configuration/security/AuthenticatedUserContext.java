@@ -1,5 +1,7 @@
 package com.plazoleta.infrastructure.configuration.security;
 
+import com.plazoleta.domain.util.MensajesError;
+
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.security.core.context.SecurityContextHolder;
 
@@ -12,7 +14,7 @@ public final class AuthenticatedUserContext {
     public static Long resolveUserId(HttpServletRequest request) {
         Long userId = resolveUserIdFromSecurityContext();
         if (userId == null) {
-            throw new MissingAuthenticatedUserException("No hay un usuario autenticado");
+            throw new MissingAuthenticatedUserException(MensajesError.NO_HAY_UN_USUARIO_AUTENTICADO);
         }
         return userId;
     }
@@ -34,7 +36,7 @@ public final class AuthenticatedUserContext {
     public static void requireRole(String role) {
         AuthenticatedUserPrincipal principal = currentPrincipal();
         if (principal == null || !role.equals(principal.getRole())) {
-            throw new org.springframework.security.access.AccessDeniedException("Rol insuficiente");
+            throw new org.springframework.security.access.AccessDeniedException(MensajesError.ROL_INSUFICIENTE);
         }
     }
 }
