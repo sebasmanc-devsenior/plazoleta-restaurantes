@@ -1,9 +1,9 @@
-package com.plazoleta.application.service;
+package com.plazoleta.application.usecase;
 
 import com.plazoleta.domain.util.MensajesError;
 
 import com.plazoleta.application.dto.DishResponse;
-import com.plazoleta.application.port.input.SetDishAvailabilityUseCase;
+import com.plazoleta.application.port.input.SetDishAvailabilityPort;
 import com.plazoleta.application.port.output.DishRepositoryPort;
 import com.plazoleta.application.port.output.RestaurantRepositoryPort;
 import com.plazoleta.application.port.output.UserRepositoryPort;
@@ -11,12 +11,12 @@ import com.plazoleta.domain.model.Role;
 import com.plazoleta.domain.exception.DishNotFoundException;
 import com.plazoleta.domain.exception.RestaurantOwnershipException;
 
-public class SetDishAvailabilityService implements SetDishAvailabilityUseCase {
+public class SetDishAvailabilityUseCase implements SetDishAvailabilityPort {
     private final DishRepositoryPort dishRepositoryPort;
     private final RestaurantRepositoryPort restaurantRepositoryPort;
     private final UserRepositoryPort userRepositoryPort;
 
-    public SetDishAvailabilityService(DishRepositoryPort dishRepositoryPort,
+    public SetDishAvailabilityUseCase(DishRepositoryPort dishRepositoryPort,
                                      RestaurantRepositoryPort restaurantRepositoryPort,
                                      UserRepositoryPort userRepositoryPort) {
         this.dishRepositoryPort = dishRepositoryPort;

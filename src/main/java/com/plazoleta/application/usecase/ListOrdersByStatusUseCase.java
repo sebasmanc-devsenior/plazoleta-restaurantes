@@ -1,4 +1,4 @@
-package com.plazoleta.application.service;
+package com.plazoleta.application.usecase;
 
 import com.plazoleta.domain.util.MensajesError;
 
@@ -6,15 +6,15 @@ import java.util.Locale;
 
 import com.plazoleta.application.dto.OrderResponse;
 import com.plazoleta.application.dto.PageResult;
-import com.plazoleta.application.port.input.ListOrdersByStatusUseCase;
+import com.plazoleta.application.port.input.ListOrdersByStatusPort;
 import com.plazoleta.application.port.output.OrderRepositoryPort;
 import com.plazoleta.domain.exception.ForbiddenOperationException;
 import com.plazoleta.domain.model.OrderStatus;
 
-public class ListOrdersByStatusService implements ListOrdersByStatusUseCase {
+public class ListOrdersByStatusUseCase implements ListOrdersByStatusPort {
     private final OrderRepositoryPort orderRepositoryPort;
 
-    public ListOrdersByStatusService(OrderRepositoryPort orderRepositoryPort) {
+    public ListOrdersByStatusUseCase(OrderRepositoryPort orderRepositoryPort) {
         this.orderRepositoryPort = orderRepositoryPort;
     }
 
@@ -24,7 +24,7 @@ public class ListOrdersByStatusService implements ListOrdersByStatusUseCase {
         if (employeeRestaurantId == null) {
             throw new ForbiddenOperationException(MensajesError.EMPLEADO_NO_ESTA_VINCULADO_A_UN_RESTAURANTE);
         }
-        ListRestaurantsService.validatePage(page, size);
+        ListRestaurantsUseCase.validatePage(page, size);
         OrderStatus orderStatus = parseStatus(status);
         var result = orderRepositoryPort.findByRestaurantAndStatus(employeeRestaurantId, orderStatus, page, size);
         return new PageResult<>(result.getContent().stream().map(OrderResponse::from).toList(),

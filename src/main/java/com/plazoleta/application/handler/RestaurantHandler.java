@@ -4,19 +4,19 @@ import com.plazoleta.application.dto.CreateRestaurantCommand;
 import com.plazoleta.application.dto.PageResult;
 import com.plazoleta.application.dto.RestaurantListItem;
 import com.plazoleta.application.dto.RestaurantResponse;
-import com.plazoleta.application.port.input.CreateRestaurantUseCase;
-import com.plazoleta.application.port.input.GetRestaurantUseCase;
-import com.plazoleta.application.port.input.ListRestaurantsUseCase;
+import com.plazoleta.application.port.input.CreateRestaurantPort;
+import com.plazoleta.application.port.input.GetRestaurantPort;
+import com.plazoleta.application.port.input.ListRestaurantsPort;
 
 /** Delega en los casos de uso de restaurantes. Se registra como @Bean en BeanConfiguration (sin Spring aquí). */
 public class RestaurantHandler implements IRestaurantHandler {
-    private final CreateRestaurantUseCase createRestaurantUseCase;
-    private final ListRestaurantsUseCase listRestaurantsUseCase;
-    private final GetRestaurantUseCase getRestaurantUseCase;
+    private final CreateRestaurantPort createRestaurantUseCase;
+    private final ListRestaurantsPort listRestaurantsUseCase;
+    private final GetRestaurantPort getRestaurantUseCase;
 
-    public RestaurantHandler(CreateRestaurantUseCase createRestaurantUseCase,
-                             ListRestaurantsUseCase listRestaurantsUseCase,
-                             GetRestaurantUseCase getRestaurantUseCase) {
+    public RestaurantHandler(CreateRestaurantPort createRestaurantUseCase,
+                             ListRestaurantsPort listRestaurantsUseCase,
+                             GetRestaurantPort getRestaurantUseCase) {
         this.createRestaurantUseCase = createRestaurantUseCase;
         this.listRestaurantsUseCase = listRestaurantsUseCase;
         this.getRestaurantUseCase = getRestaurantUseCase;

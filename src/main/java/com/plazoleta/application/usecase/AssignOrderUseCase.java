@@ -1,9 +1,9 @@
-package com.plazoleta.application.service;
+package com.plazoleta.application.usecase;
 
 import com.plazoleta.domain.util.MensajesError;
 
 import com.plazoleta.application.dto.OrderResponse;
-import com.plazoleta.application.port.input.AssignOrderUseCase;
+import com.plazoleta.application.port.input.AssignOrderPort;
 import com.plazoleta.application.port.output.OrderRepositoryPort;
 import com.plazoleta.application.port.output.OrderTraceabilityPort;
 import com.plazoleta.domain.exception.InvalidOrderStatusException;
@@ -12,11 +12,11 @@ import com.plazoleta.domain.exception.OrderNotFoundException;
 import com.plazoleta.domain.model.Order;
 import com.plazoleta.domain.model.OrderStatus;
 
-public class AssignOrderService implements AssignOrderUseCase {
+public class AssignOrderUseCase implements AssignOrderPort {
     private final OrderRepositoryPort orderRepositoryPort;
     private final OrderTraceabilityPort orderTraceabilityPort;
 
-    public AssignOrderService(OrderRepositoryPort orderRepositoryPort, OrderTraceabilityPort orderTraceabilityPort) {
+    public AssignOrderUseCase(OrderRepositoryPort orderRepositoryPort, OrderTraceabilityPort orderTraceabilityPort) {
         this.orderRepositoryPort = orderRepositoryPort;
         this.orderTraceabilityPort = orderTraceabilityPort;
     }

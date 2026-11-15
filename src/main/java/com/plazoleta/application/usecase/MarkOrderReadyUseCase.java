@@ -1,9 +1,9 @@
-package com.plazoleta.application.service;
+package com.plazoleta.application.usecase;
 
 import com.plazoleta.domain.util.MensajesError;
 
 import com.plazoleta.application.dto.OrderResponse;
-import com.plazoleta.application.port.input.MarkOrderReadyUseCase;
+import com.plazoleta.application.port.input.MarkOrderReadyPort;
 import com.plazoleta.application.port.output.OrderRepositoryPort;
 import com.plazoleta.application.port.output.OrderTraceabilityPort;
 import com.plazoleta.application.port.output.PinGeneratorPort;
@@ -15,14 +15,14 @@ import com.plazoleta.domain.model.Order;
 import com.plazoleta.domain.model.OrderStatus;
 import com.plazoleta.domain.model.User;
 
-public class MarkOrderReadyService implements MarkOrderReadyUseCase {
+public class MarkOrderReadyUseCase implements MarkOrderReadyPort {
     private final OrderRepositoryPort orderRepositoryPort;
     private final OrderTraceabilityPort orderTraceabilityPort;
     private final UserRepositoryPort userRepositoryPort;
     private final PinGeneratorPort pinGeneratorPort;
     private final SmsNotificationPort smsNotificationPort;
 
-    public MarkOrderReadyService(OrderRepositoryPort orderRepositoryPort, UserRepositoryPort userRepositoryPort,
+    public MarkOrderReadyUseCase(OrderRepositoryPort orderRepositoryPort, UserRepositoryPort userRepositoryPort,
                                  PinGeneratorPort pinGeneratorPort, SmsNotificationPort smsNotificationPort,
                                  OrderTraceabilityPort orderTraceabilityPort) {
         this.orderRepositoryPort = orderRepositoryPort;
@@ -34,9 +34,9 @@ public class MarkOrderReadyService implements MarkOrderReadyUseCase {
 
     @Override
     public OrderResponse execute(Long orderId, Long employeeId, Long employeeRestaurantId) {
-        Order order = AssignOrderService.findOrderOfEmployeeRestaurant(orderRepositoryPort, orderId,
+        Order order = AssignOrderUseCase.findOrderOfEmployeeRestaurant(orderRepositoryPort, orderId,
                 employeeRestaurantId);
-        AssignOrderService.requireAssignedEmployee(order, employeeId);
+        AssignOrderUseCase.requireAssignedEmployee(order, employeeId);
         String pin = pinGeneratorPort.generate();
         OrderStatus previousStatus = order.getStatus();
         order.markReady(pin);

@@ -1,10 +1,10 @@
-package com.plazoleta.application.service;
+package com.plazoleta.application.usecase;
 
 import com.plazoleta.domain.util.MensajesError;
 
 import com.plazoleta.application.dto.CreateRestaurantCommand;
 import com.plazoleta.application.dto.RestaurantResponse;
-import com.plazoleta.application.port.input.CreateRestaurantUseCase;
+import com.plazoleta.application.port.input.CreateRestaurantPort;
 import com.plazoleta.application.port.output.RestaurantRepositoryPort;
 import com.plazoleta.application.port.output.UserRepositoryPort;
 import com.plazoleta.domain.model.Role;
@@ -12,11 +12,11 @@ import com.plazoleta.domain.exception.UserNotFoundException;
 import com.plazoleta.domain.model.Restaurant;
 import com.plazoleta.domain.model.User;
 
-public class CreateRestaurantService implements CreateRestaurantUseCase {
+public class CreateRestaurantUseCase implements CreateRestaurantPort {
     private final RestaurantRepositoryPort restaurantRepositoryPort;
     private final UserRepositoryPort userRepositoryPort;
 
-    public CreateRestaurantService(RestaurantRepositoryPort restaurantRepositoryPort, UserRepositoryPort userRepositoryPort) {
+    public CreateRestaurantUseCase(RestaurantRepositoryPort restaurantRepositoryPort, UserRepositoryPort userRepositoryPort) {
         this.restaurantRepositoryPort = restaurantRepositoryPort;
         this.userRepositoryPort = userRepositoryPort;
     }

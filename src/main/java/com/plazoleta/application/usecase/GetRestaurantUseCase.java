@@ -1,9 +1,9 @@
-package com.plazoleta.application.service;
+package com.plazoleta.application.usecase;
 
 import com.plazoleta.domain.util.MensajesError;
 
 import com.plazoleta.application.dto.RestaurantResponse;
-import com.plazoleta.application.port.input.GetRestaurantUseCase;
+import com.plazoleta.application.port.input.GetRestaurantPort;
 import com.plazoleta.application.port.output.RestaurantRepositoryPort;
 import com.plazoleta.domain.exception.RestaurantNotFoundException;
 
@@ -11,10 +11,10 @@ import com.plazoleta.domain.exception.RestaurantNotFoundException;
  * Consulta un restaurante por id. Lo usa users-service para verificar que quien crea un
  * empleado (HU-6) es el propietario del restaurante.
  */
-public class GetRestaurantService implements GetRestaurantUseCase {
+public class GetRestaurantUseCase implements GetRestaurantPort {
     private final RestaurantRepositoryPort restaurantRepositoryPort;
 
-    public GetRestaurantService(RestaurantRepositoryPort restaurantRepositoryPort) {
+    public GetRestaurantUseCase(RestaurantRepositoryPort restaurantRepositoryPort) {
         this.restaurantRepositoryPort = restaurantRepositoryPort;
     }
 

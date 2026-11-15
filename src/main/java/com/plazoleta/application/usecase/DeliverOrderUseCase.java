@@ -1,21 +1,21 @@
-package com.plazoleta.application.service;
+package com.plazoleta.application.usecase;
 
 import com.plazoleta.domain.util.MensajesError;
 
 import com.plazoleta.application.dto.DeliverOrderCommand;
 import com.plazoleta.application.dto.OrderResponse;
-import com.plazoleta.application.port.input.DeliverOrderUseCase;
+import com.plazoleta.application.port.input.DeliverOrderPort;
 import com.plazoleta.application.port.output.OrderRepositoryPort;
 import com.plazoleta.application.port.output.OrderTraceabilityPort;
 import com.plazoleta.domain.exception.InvalidOrderStatusException;
 import com.plazoleta.domain.model.Order;
 import com.plazoleta.domain.model.OrderStatus;
 
-public class DeliverOrderService implements DeliverOrderUseCase {
+public class DeliverOrderUseCase implements DeliverOrderPort {
     private final OrderRepositoryPort orderRepositoryPort;
     private final OrderTraceabilityPort orderTraceabilityPort;
 
-    public DeliverOrderService(OrderRepositoryPort orderRepositoryPort, OrderTraceabilityPort orderTraceabilityPort) {
+    public DeliverOrderUseCase(OrderRepositoryPort orderRepositoryPort, OrderTraceabilityPort orderTraceabilityPort) {
         this.orderRepositoryPort = orderRepositoryPort;
         this.orderTraceabilityPort = orderTraceabilityPort;
     }
@@ -26,9 +26,9 @@ public class DeliverOrderService implements DeliverOrderUseCase {
         if (command == null) {
             throw new IllegalArgumentException(MensajesError.CUERPO_DE_LA_PETICION_ES_OBLIGATORIO);
         }
-        Order order = AssignOrderService.findOrderOfEmployeeRestaurant(orderRepositoryPort, orderId,
+        Order order = AssignOrderUseCase.findOrderOfEmployeeRestaurant(orderRepositoryPort, orderId,
                 employeeRestaurantId);
-        AssignOrderService.requireAssignedEmployee(order, employeeId);
+        AssignOrderUseCase.requireAssignedEmployee(order, employeeId);
         OrderStatus previousStatus = order.getStatus();
         order.deliver(command.getPin());
         // Solo se guarda si el pedido sigue LISTO en la base: una entrega doble no se registra dos veces.

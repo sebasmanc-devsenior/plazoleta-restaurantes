@@ -1,4 +1,4 @@
-package com.plazoleta.application.service;
+package com.plazoleta.application.usecase;
 
 import com.plazoleta.domain.util.MensajesError;
 
@@ -8,7 +8,7 @@ import java.util.List;
 
 import com.plazoleta.application.dto.CreateOrderCommand;
 import com.plazoleta.application.dto.OrderResponse;
-import com.plazoleta.application.port.input.CreateOrderUseCase;
+import com.plazoleta.application.port.input.CreateOrderPort;
 import com.plazoleta.application.port.output.DishRepositoryPort;
 import com.plazoleta.application.port.output.OrderRepositoryPort;
 import com.plazoleta.application.port.output.OrderTraceabilityPort;
@@ -26,7 +26,7 @@ import com.plazoleta.domain.model.OrderStatus;
 import com.plazoleta.domain.model.Role;
 import com.plazoleta.domain.model.User;
 
-public class CreateOrderService implements CreateOrderUseCase {
+public class CreateOrderUseCase implements CreateOrderPort {
     private final OrderRepositoryPort orderRepositoryPort;
     private final DishRepositoryPort dishRepositoryPort;
     private final RestaurantRepositoryPort restaurantRepositoryPort;
@@ -34,7 +34,7 @@ public class CreateOrderService implements CreateOrderUseCase {
     private final OrderTraceabilityPort orderTraceabilityPort;
     private final Clock clock;
 
-    public CreateOrderService(OrderRepositoryPort orderRepositoryPort, DishRepositoryPort dishRepositoryPort,
+    public CreateOrderUseCase(OrderRepositoryPort orderRepositoryPort, DishRepositoryPort dishRepositoryPort,
                               RestaurantRepositoryPort restaurantRepositoryPort, UserRepositoryPort userRepositoryPort,
                               OrderTraceabilityPort orderTraceabilityPort, Clock clock) {
         this.orderRepositoryPort = orderRepositoryPort;

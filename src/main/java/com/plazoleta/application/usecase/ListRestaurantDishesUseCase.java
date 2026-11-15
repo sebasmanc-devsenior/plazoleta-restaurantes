@@ -1,19 +1,19 @@
-package com.plazoleta.application.service;
+package com.plazoleta.application.usecase;
 
 import com.plazoleta.domain.util.MensajesError;
 
 import com.plazoleta.application.dto.DishResponse;
 import com.plazoleta.application.dto.PageResult;
-import com.plazoleta.application.port.input.ListRestaurantDishesUseCase;
+import com.plazoleta.application.port.input.ListRestaurantDishesPort;
 import com.plazoleta.application.port.output.DishRepositoryPort;
 import com.plazoleta.application.port.output.RestaurantRepositoryPort;
 import com.plazoleta.domain.exception.RestaurantNotFoundException;
 
-public class ListRestaurantDishesService implements ListRestaurantDishesUseCase {
+public class ListRestaurantDishesUseCase implements ListRestaurantDishesPort {
     private final DishRepositoryPort dishRepositoryPort;
     private final RestaurantRepositoryPort restaurantRepositoryPort;
 
-    public ListRestaurantDishesService(DishRepositoryPort dishRepositoryPort,
+    public ListRestaurantDishesUseCase(DishRepositoryPort dishRepositoryPort,
                                        RestaurantRepositoryPort restaurantRepositoryPort) {
         this.dishRepositoryPort = dishRepositoryPort;
         this.restaurantRepositoryPort = restaurantRepositoryPort;
@@ -21,7 +21,7 @@ public class ListRestaurantDishesService implements ListRestaurantDishesUseCase 
 
     @Override
     public PageResult<DishResponse> execute(Long restaurantId, String category, int page, int size) {
-        ListRestaurantsService.validatePage(page, size);
+        ListRestaurantsUseCase.validatePage(page, size);
         if (restaurantId == null) {
             throw new IllegalArgumentException(MensajesError.ID_DEL_RESTAURANTE_ES_OBLIGATORIO);
         }

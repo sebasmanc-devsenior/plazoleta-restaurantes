@@ -1,16 +1,16 @@
-package com.plazoleta.application.service;
+package com.plazoleta.application.usecase;
 
 import com.plazoleta.domain.util.MensajesError;
 
 import com.plazoleta.application.dto.PageResult;
 import com.plazoleta.application.dto.RestaurantListItem;
-import com.plazoleta.application.port.input.ListRestaurantsUseCase;
+import com.plazoleta.application.port.input.ListRestaurantsPort;
 import com.plazoleta.application.port.output.RestaurantRepositoryPort;
 
-public class ListRestaurantsService implements ListRestaurantsUseCase {
+public class ListRestaurantsUseCase implements ListRestaurantsPort {
     private final RestaurantRepositoryPort restaurantRepositoryPort;
 
-    public ListRestaurantsService(RestaurantRepositoryPort restaurantRepositoryPort) {
+    public ListRestaurantsUseCase(RestaurantRepositoryPort restaurantRepositoryPort) {
         this.restaurantRepositoryPort = restaurantRepositoryPort;
     }
 

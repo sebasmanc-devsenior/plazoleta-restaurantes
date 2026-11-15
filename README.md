@@ -38,9 +38,9 @@ src/main/java/com/plazoleta/
 ├── application/                ← handlers, casos de uso y puertos, sin Spring
 │   ├── handler/                IRestaurantHandler, IDishHandler, IOrderHandler (+ implementación)
 │   ├── port/
-│   │   ├── input/              un caso de uso por historia (CreateRestaurantUseCase…)
+│   │   ├── input/              puerto de entrada de cada caso de uso (CreateRestaurantPort…)
 │   │   └── output/             RestaurantRepositoryPort, DishRepositoryPort, UserRepositoryPort
-│   ├── service/                implementación de cada caso de uso
+│   ├── usecase/                casos de uso: clases concretas con toda la lógica (CreateRestaurantUseCase…)
 │   └── dto/                    datos que entran y salen de los casos de uso
 └── infrastructure/             ← adaptadores y frameworks
     ├── input/
@@ -55,8 +55,8 @@ src/main/java/com/plazoleta/
 ```
 
 Flujo de cada petición: `Controller` (solo HTTP: request DTO validado con Jakarta, mapper a comando) →
-`IXHandler` (aplicación: coordina y delega, sin reglas de negocio) → interfaz del caso de uso (`port/input`) →
-`Service` (toda la lógica) → puertos de salida → adaptadores.
+`IXHandler` (aplicación: coordina y delega, sin reglas de negocio) → puerto de entrada (`port/input`, interfaz) →
+caso de uso (`usecase`, clase concreta con toda la lógica) → puertos de salida → adaptadores.
 
 ## Cómo ejecutar
 
