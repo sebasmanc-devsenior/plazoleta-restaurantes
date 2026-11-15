@@ -4,21 +4,21 @@ import com.plazoleta.application.dto.CreateDishCommand;
 import com.plazoleta.application.dto.DishResponse;
 import com.plazoleta.application.dto.PageResult;
 import com.plazoleta.application.dto.UpdateDishCommand;
-import com.plazoleta.application.port.input.CreateDishUseCase;
-import com.plazoleta.application.port.input.ListRestaurantDishesUseCase;
-import com.plazoleta.application.port.input.SetDishAvailabilityUseCase;
-import com.plazoleta.application.port.input.UpdateDishUseCase;
+import com.plazoleta.application.port.input.CreateDishPort;
+import com.plazoleta.application.port.input.ListRestaurantDishesPort;
+import com.plazoleta.application.port.input.SetDishAvailabilityPort;
+import com.plazoleta.application.port.input.UpdateDishPort;
 
 /** Delega en los casos de uso de platos. Se registra como @Bean en BeanConfiguration (sin Spring aquí). */
 public class DishHandler implements IDishHandler {
-    private final CreateDishUseCase createDishUseCase;
-    private final UpdateDishUseCase updateDishUseCase;
-    private final SetDishAvailabilityUseCase setDishAvailabilityUseCase;
-    private final ListRestaurantDishesUseCase listRestaurantDishesUseCase;
+    private final CreateDishPort createDishUseCase;
+    private final UpdateDishPort updateDishUseCase;
+    private final SetDishAvailabilityPort setDishAvailabilityUseCase;
+    private final ListRestaurantDishesPort listRestaurantDishesUseCase;
 
-    public DishHandler(CreateDishUseCase createDishUseCase, UpdateDishUseCase updateDishUseCase,
-                       SetDishAvailabilityUseCase setDishAvailabilityUseCase,
-                       ListRestaurantDishesUseCase listRestaurantDishesUseCase) {
+    public DishHandler(CreateDishPort createDishUseCase, UpdateDishPort updateDishUseCase,
+                       SetDishAvailabilityPort setDishAvailabilityUseCase,
+                       ListRestaurantDishesPort listRestaurantDishesUseCase) {
         this.createDishUseCase = createDishUseCase;
         this.updateDishUseCase = updateDishUseCase;
         this.setDishAvailabilityUseCase = setDishAvailabilityUseCase;

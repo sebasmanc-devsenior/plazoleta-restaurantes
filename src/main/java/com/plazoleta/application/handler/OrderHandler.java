@@ -4,25 +4,25 @@ import com.plazoleta.application.dto.CreateOrderCommand;
 import com.plazoleta.application.dto.DeliverOrderCommand;
 import com.plazoleta.application.dto.OrderResponse;
 import com.plazoleta.application.dto.PageResult;
-import com.plazoleta.application.port.input.AssignOrderUseCase;
-import com.plazoleta.application.port.input.CancelOrderUseCase;
-import com.plazoleta.application.port.input.CreateOrderUseCase;
-import com.plazoleta.application.port.input.DeliverOrderUseCase;
-import com.plazoleta.application.port.input.ListOrdersByStatusUseCase;
-import com.plazoleta.application.port.input.MarkOrderReadyUseCase;
+import com.plazoleta.application.port.input.AssignOrderPort;
+import com.plazoleta.application.port.input.CancelOrderPort;
+import com.plazoleta.application.port.input.CreateOrderPort;
+import com.plazoleta.application.port.input.DeliverOrderPort;
+import com.plazoleta.application.port.input.ListOrdersByStatusPort;
+import com.plazoleta.application.port.input.MarkOrderReadyPort;
 
 /** Delega en los casos de uso de pedidos. Se registra como @Bean en BeanConfiguration (sin Spring aquí). */
 public class OrderHandler implements IOrderHandler {
-    private final CreateOrderUseCase createOrderUseCase;
-    private final ListOrdersByStatusUseCase listOrdersByStatusUseCase;
-    private final AssignOrderUseCase assignOrderUseCase;
-    private final MarkOrderReadyUseCase markOrderReadyUseCase;
-    private final DeliverOrderUseCase deliverOrderUseCase;
-    private final CancelOrderUseCase cancelOrderUseCase;
+    private final CreateOrderPort createOrderUseCase;
+    private final ListOrdersByStatusPort listOrdersByStatusUseCase;
+    private final AssignOrderPort assignOrderUseCase;
+    private final MarkOrderReadyPort markOrderReadyUseCase;
+    private final DeliverOrderPort deliverOrderUseCase;
+    private final CancelOrderPort cancelOrderUseCase;
 
-    public OrderHandler(CreateOrderUseCase createOrderUseCase, ListOrdersByStatusUseCase listOrdersByStatusUseCase,
-                        AssignOrderUseCase assignOrderUseCase, MarkOrderReadyUseCase markOrderReadyUseCase,
-                        DeliverOrderUseCase deliverOrderUseCase, CancelOrderUseCase cancelOrderUseCase) {
+    public OrderHandler(CreateOrderPort createOrderUseCase, ListOrdersByStatusPort listOrdersByStatusUseCase,
+                        AssignOrderPort assignOrderUseCase, MarkOrderReadyPort markOrderReadyUseCase,
+                        DeliverOrderPort deliverOrderUseCase, CancelOrderPort cancelOrderUseCase) {
         this.createOrderUseCase = createOrderUseCase;
         this.listOrdersByStatusUseCase = listOrdersByStatusUseCase;
         this.assignOrderUseCase = assignOrderUseCase;
